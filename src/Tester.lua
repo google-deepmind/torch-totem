@@ -435,23 +435,31 @@ local function bracket(str)
 end
 
 
-function Tester:_report(tests, ntests, summary)
-    if not tests then
-        tests = self.tests
-    end
-    io.write('Completed ' .. pluralize(self.countasserts, 'assert'))
-    io.write(' in ' .. pluralize(ntests, 'test') .. ' with ')
-
+function Tester:_nfailures(tests)
     local nfailures = 0
-    local nerrors = 0
     for name,_ in pairs(tests) do
         if self.assertionFail[name] > 0 then
             nfailures = nfailures + 1
         end
+    end
+    return nfailures
+end
+
+
+function Tester:_nerrors(tests)
+    local nerrors = 0
+    for name,_ in pairs(tests) do
         if self.testError[name] > 0 then
             nerrors = nerrors + 1
         end
     end
+    return nerrors
+end
+
+
+function Tester:_report(tests, ntests, nfailures, nerrors, summary)
+    io.write('Completed ' .. pluralize(self.countasserts, 'assert'))
+    io.write(' in ' .. pluralize(ntests, 'test') .. ' with ')
 
     io.write(coloured(pluralize(nfailures, 'failure'), nfailures == 0 and c.green or c.red))
     io.write(' and ')
@@ -654,7 +662,9 @@ function Tester:_run(tests, summary)
       
         collectgarbage()
     end
-    self:_report(tests, ntests, summary)
+    local nfailures = self:_nfailures(tests)
+    local nerrors = self:_nerrors(tests)
+    self:_report(tests, ntests, nfailures, nerrors, summary)
 end
 
 
