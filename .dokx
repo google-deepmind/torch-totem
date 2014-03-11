@@ -1,0 +1,7 @@
+return {
+    exclude = { 'examples', 'scripts', 'build' },
+    mathematics = false,
+    githubURL = 'projectconcept/totem',
+    includeLocal = false,
+    includePrivate = false
+}
