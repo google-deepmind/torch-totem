@@ -2,7 +2,7 @@ package = 'totem'
 version = '0-0'
 
 source = {
-	url = 'https://github.com/akfidjeland/torch-totem.git',
+	url = 'git://github.com/akfidjeland/torch-totem.git',
 	branch = 'master'
 }
 
@@ -21,6 +21,7 @@ build = {
 		['totem.Tester'] = 'src/Tester.lua',
 		['totem.examples.test_simple'] = 'examples/test_simple.lua',
 		['totem.examples.test_nn'] = 'examples/test_nn.lua',
+		['totem.examples.test_tensor'] = 'examples/test_tensor.lua',
 	},
 	install = {
 		bin = {
