@@ -550,11 +550,13 @@ all the tests are run.
     local tests = self:_getTests(candidates)
     if args.list then
         self:_listTests(tests)
+        return 0
     else
-        self:_run(tests, args.summary)
+        local status = self:_run(tests, args.summary)
         if args.log_output then
             self:_logOutput(args.log_output, tests)
         end
+        return status
     end
 end
 
@@ -568,11 +570,13 @@ Parameters:
 
 ]]
 function Tester:run(tests)
+    local status = 0
     if arg then
-        self:_runCL()
+        status = self:_runCL()
     else
-        self:_run(self:_getTests(tests))
+        status = self:_run(self:_getTests(tests))
     end
+    os.exit(status)
 end
 
 
@@ -665,6 +669,7 @@ function Tester:_run(tests, summary)
     local nfailures = self:_nfailures(tests)
     local nerrors = self:_nerrors(tests)
     self:_report(tests, ntests, nfailures, nerrors, summary)
+    return nfailures + nerrors == 0 and 0 or 1
 end
 
 
