@@ -1,6 +1,6 @@
 local lapp = require 'pl.lapp'
-require 'sys'
-local c = sys.COLORS
+
+local c = {} -- dummy colour list
 
 local NCOLS = 80
 
@@ -425,8 +425,9 @@ local function pluralize(num, str)
 end
 
 
-local function coloured(str, colour)
-    return colour .. str .. c.none
+-- dummy function
+local function coloured(str)
+    return str
 end
 
 
@@ -529,8 +530,12 @@ all the tests are run.
         candidates = args
     end
 
-    if args.no_colour then
-        coloured = function(str) return str end
+    if not args.no_colour then
+        require 'sys'
+        c = sys.COLORS
+        coloured = function(str, colour)
+            return colour .. str .. c.none
+        end
     end
 
     if not args.full_tensors then
