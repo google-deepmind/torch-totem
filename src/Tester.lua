@@ -613,7 +613,7 @@ end
 
 
 local function countFormat(n)
-    total = string.format('%u', n)
+    local total = string.format('%u', n)
     return string.format('%%%uu/%u ', total:len(), total), total:len() * 2 + 2
 end
 
@@ -633,7 +633,7 @@ function Tester:_run(tests, summary)
         ntests = ntests + 1
     end
 
-    cfmt, cfmtlen = countFormat(ntests)
+    local cfmt, cfmtlen = countFormat(ntests)
 
     io.write('Running ' .. pluralize(ntests, 'test') .. '\n')
     local i = 1
