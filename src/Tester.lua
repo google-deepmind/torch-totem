@@ -18,7 +18,7 @@ end
 
 
 -- Add a success to the test
-function Tester:_success (message)
+function Tester:_success ()
     self.countasserts = self.countasserts + 1
     local name = self.curtestname
     self.assertionPass[name] = self.assertionPass[name] + 1
@@ -320,25 +320,25 @@ Parameters:
 - `expected` (number, table, userData) the expected value
 - `label` (string) used for output labelling
 - `precision` (number) the maximum allowed precision required to pass
+- `ret` (boolean) whether to return a value instead of running an assertion (default is false)
 
 ]]
-function Tester:eq(got, expected, label, precision)
+function Tester:eq(got, expected, label, precision, ret)
+    local ret = ret or false
     label = label or "eq"
     precision = precision or 0
 
     local ok
     local diff = 0
     if type(expected) == "table" then
-        self:_eqTable(got, expected, label, precision)
-        return
+        return self:_eqTable(got, expected, label, precision)
     elseif type(expected) == "userdata" then
         if got.nDimension then
             self:_eqSize(got, expected, label)
             diff = got:clone():add(-1, expected):abs():max()
             ok = diff <= precision
         else
-            self:_eqStorage(got, expected, label, precision)
-            return
+            return self:_eqStorage(got, expected, label, precision)
         end
     else
         if precision == 0 then
@@ -349,11 +349,15 @@ function Tester:eq(got, expected, label, precision)
         end
     end
 
-    self:_assert_sub(ok, 
-        function ()
-            return string.format("%s violation at precision %f (max diff=%f): %s != %s",
-                    tostring(label), precision, diff, tostring(got), tostring(expected))
-        end)
+    if ret then
+        return ok
+    else
+        self:_assert_sub(ok,
+            function ()
+                return string.format("%s violation at precision %f (max diff=%f): %s != %s",
+                        tostring(label), precision, diff, tostring(got), tostring(expected))
+            end)
+    end
 end
 
 
@@ -381,22 +385,51 @@ function Tester:_eqStorage(got, expected, label, precision)
     self:_assert_sub(#got == #expected, 
         string.format("%s inconsistent storage size: %s != %s", label, #got, #expected))
     for i = 1, #expected do
-        self:eq(got[i], expected[i], label, precision)
+        if not self:eq(got[i], expected[i], label, precision, true) then
+            self:_failure(string.format("%s inconsistent values: %s != %s at position %d",
+                          label, tostring(got[i]), tostring(expected[i]), i))
+            return false
+        end
     end
+
+    self:_success()
+    return true
 end
 
 
 function Tester:_eqTable(got, expected, label, precision)
-    self:_assert_sub(#got == #expected,
-        string.format("%s inconsistent table size: %s != %s", label, #got, #expected))
+    local failure = function(value1, value2, position)
+        if type(value1) == 'table' then
+            value1 = 'table1'
+        end
+        if type(value2) == 'table' then
+            value2 = 'table2'
+        end
+        self:_failure(string.format("%s inconsistent values: %s != %s at position %d",
+                      label, tostring(value1), tostring(value2), position))
+    end
+
+    if #got ~= #expected then
+        self:_failure(string.format("%s inconsistent table size: %s != %s", label, #got, #expected))
+        return false
+    end
 
     for k, v in pairs(expected) do
-        self:eq(got[k], v, label, precision)
+        if not self:eq(got[k], v, label, precision, true) then
+            failure(got[k], v, k)
+            return false
+        end
     end
 
     for k, v in pairs(got) do
-        self:eq(v, expected[k], label, precision)
+        if not self:eq(v, expected[k], label, precision, true) then
+            failure(v, expected[k], k)
+            return false
+        end
     end
+
+    self:_success()
+    return true
 end
 
 
