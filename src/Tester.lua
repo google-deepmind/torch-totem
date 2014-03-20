@@ -330,7 +330,12 @@ function Tester:eq(got, expected, label, precision, ret)
 
     local ok
     local diff = 0
-    if type(expected) == "table" then
+    if type(got) ~= type(expected) then
+        if not ret then
+            self:_failure(string.format("%s inconsistent types: %s and %s",label,type(got),type(expected)))
+        end
+        return false
+    elseif type(expected) == "table" then
         return self:_eqTable(got, expected, label, precision)
     elseif type(expected) == "userdata" then
         if got.nDimension then
@@ -349,15 +354,14 @@ function Tester:eq(got, expected, label, precision, ret)
         end
     end
 
-    if ret then
-        return ok
-    else
+    if not ret then
         self:_assert_sub(ok,
             function ()
                 return string.format("%s violation at precision %f (max diff=%f): %s != %s",
                         tostring(label), precision, diff, tostring(got), tostring(expected))
             end)
     end
+    return ok
 end
 
 
