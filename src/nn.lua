@@ -49,7 +49,7 @@ local function produceRandomGradOutput(output)
     if isTensor(output) then
         return torch.randn(output:size()):typeAs(output)
     elseif type(output) == 'number' then
-        return torch.randn(1)[1]
+        return torch.normal()
     end
 
     local gradOutput = {}
