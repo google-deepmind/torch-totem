@@ -519,6 +519,7 @@ Options:
   --summary print only pass/fail status rather than full error messages.
   --full-tensors when printing tensors, always print in full even if large.
         Otherwise just print a summary for large tensors.
+  --early-abort (optional boolean) abort execution on first error.
  
 If any test names are specified only the named tests are run. Otherwise
 all the tests are run.
@@ -552,7 +553,7 @@ all the tests are run.
         self:_listTests(tests)
         return 0
     else
-        local status = self:_run(tests, args.summary)
+        local status = self:_run(tests, args.summary, args.early_abort)
         if args.log_output then
             self:_logOutput(args.log_output, tests)
         end
@@ -618,7 +619,7 @@ local function countFormat(n)
 end
 
 
-function Tester:_run(tests, summary)
+function Tester:_run(tests, summary, earlyAbort)
 
     self.countasserts = 0
 
@@ -662,8 +663,13 @@ function Tester:_run(tests, summary)
         io.write('\n')
         io.flush()
 
+        if earlyAbort and (i<ntests) and (not stat or not pass) then
+            io.write('Aborting on first error, not all tests have been executed\n')
+            break
+        end
+
         i = i + 1
-      
+
         collectgarbage()
     end
     local nfailures = self:_nfailures(tests)
