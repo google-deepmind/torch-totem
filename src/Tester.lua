@@ -324,11 +324,12 @@ Parameters:
 
 ]]
 function Tester:eq(got, expected, label, precision, ret)
-    local ret = ret or false
+
+    ret = ret or false
     label = label or "eq"
     precision = precision or 0
 
-    local ok
+    local ok = false
     local diff = 0
     if type(got) ~= type(expected) then
         if not ret then
