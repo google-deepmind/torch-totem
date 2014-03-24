@@ -501,7 +501,7 @@ function Tester:_listTests(tests)
 end
 
 
-function Tester:_runCL(candidates)
+function Tester:_runCL(candidates, earlyAbort)
 
     local args = lapp([[Run tests
 
@@ -552,7 +552,7 @@ all the tests are run.
         self:_listTests(tests)
         return 0
     else
-        local status = self:_run(tests, args.summary)
+        local status = self:_run(tests, args.summary, earlyAbort)
         if args.log_output then
             self:_logOutput(args.log_output, tests)
         end
@@ -569,12 +569,12 @@ Parameters:
    running from the command-line).
 
 ]]
-function Tester:run(tests)
+function Tester:run(tests, earlyAbort)
     local status = 0
     if arg then
-        status = self:_runCL()
+        status = self:_runCL(nil, earlyAbort)
     else
-        status = self:_run(self:_getTests(tests))
+        status = self:_run(self:_getTests(tests), nil, earlyAbort)
     end
     os.exit(status)
 end
@@ -618,7 +618,7 @@ local function countFormat(n)
 end
 
 
-function Tester:_run(tests, summary)
+function Tester:_run(tests, summary, earlyAbort)
 
     self.countasserts = 0
 
@@ -665,6 +665,10 @@ function Tester:_run(tests, summary)
         i = i + 1
       
         collectgarbage()
+        if earlyAbort and (not stat or not pass) then
+            io.write('EARLY ABORT\n')
+            break
+        end
     end
     local nfailures = self:_nfailures(tests)
     local nerrors = self:_nerrors(tests)
