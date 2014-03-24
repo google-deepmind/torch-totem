@@ -30,7 +30,7 @@ function Tester:_failure (message)
     local name = self.curtestname
     self.assertionFail[name] = self.assertionFail[name] + 1
     local ss = debug.traceback('tester',2)
-    ss = ss:match('[.]*\n([^\n]+\n[^\n]+)\n[^\n]+xpcall')
+    ss = ss:match('.-\n([^\n]+\n[^\n]+)\n[^\n]+xpcall')
     if type(message) == 'function' then
         message = message()
     end
