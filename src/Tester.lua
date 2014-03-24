@@ -636,11 +636,6 @@ function Tester:_run(tests, summary, earlyAbort)
 
     local cfmt, cfmtlen = countFormat(ntests)
 
-    local nTests = 0
-    for _ in pairs(tests) do
-        nTests = nTests + 1
-    end
-
     io.write('Running ' .. pluralize(ntests, 'test') .. '\n')
     local i = 1
     for name,fn in pairs(tests) do
@@ -668,7 +663,7 @@ function Tester:_run(tests, summary, earlyAbort)
         io.write('\n')
         io.flush()
 
-        if earlyAbort and (i<nTests) and (not stat or not pass) then
+        if earlyAbort and (i<ntests) and (not stat or not pass) then
             io.write('Aborting on first error, not all tests have been executed\n')
             break
         end
