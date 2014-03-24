@@ -501,7 +501,7 @@ function Tester:_listTests(tests)
 end
 
 
-function Tester:_runCL(candidates, earlyAbort)
+function Tester:_runCL(candidates)
 
     local args = lapp([[Run tests
 
@@ -674,6 +674,7 @@ function Tester:_run(tests, summary, earlyAbort)
         end
 
         i = i + 1
+
         collectgarbage()
     end
     local nfailures = self:_nfailures(tests)
