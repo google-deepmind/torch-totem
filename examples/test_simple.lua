@@ -23,4 +23,4 @@ function test.C()
     error('Errors are treated differently than failures')
 end
  
-tester:add(test):run()
+return tester:add(test):run()

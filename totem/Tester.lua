@@ -18,14 +18,15 @@ end
 
 
 -- Add a success to the test
-function Tester:_success ()
+function Tester:_success()
     self.countasserts = self.countasserts + 1
     local name = self.curtestname
     self.assertionPass[name] = self.assertionPass[name] + 1
 end
 
+
 -- Add a failure to the test
-function Tester:_failure (message)
+function Tester:_failure(message)
     self.countasserts = self.countasserts + 1
     local name = self.curtestname
     self.assertionFail[name] = self.assertionFail[name] + 1
@@ -34,8 +35,13 @@ function Tester:_failure (message)
     if type(message) == 'function' then
         message = message()
     end
-    self.errors[#self.errors+1] = self.curtestname .. '\n' .. message .. '\n' .. ss .. '\n'
+    if message then
+        self.errors[#self.errors+1] = self.curtestname .. '\n' .. message .. '\n' .. ss .. '\n'
+    else
+        self.errors[#self.errors+1] = true -- no message to print
+    end
 end
+
 
 --[[
 
@@ -509,10 +515,12 @@ function Tester:_report(tests, ntests, nfailures, nerrors, summary)
         io.write(string.rep('-', NCOLS))
         io.write('\n')
         for i,v in ipairs(self.errors) do
-            io.write(v)
-            io.write('\n')
-            io.write(string.rep('-', NCOLS))
-            io.write('\n')
+            if type(v) == 'string' then
+                io.write(v)
+                io.write('\n')
+                io.write(string.rep('-', NCOLS))
+                io.write('\n')
+            end
         end
     end
 end
@@ -732,9 +740,15 @@ end
 
 Parameters:
 
-- `f` (function or table) add the function or every function in the table to
-   the test set.
-- `name` (optional string) name of test
+- `test` (function, table, number, string)
+    A function is a test case that makes assertions.
+    A table should contain a number of functions. These are added individually.
+    A number is assumed to be a return code from a tester run, for use in
+    nested tests. 0 means no errors, while any other value indicate error.
+    A string is assumed to be a filename which when loaded returns a test
+    return code as described above.
+- `name` (optional string) name of test. If the test is a filename, the `name`
+    parameter is ignored.
 
 Return:
 
@@ -749,8 +763,14 @@ function Tester:add(f, name)
         end
     elseif type(f) == "function" then
         self.tests[name] = f
+    elseif type(f) == "number" then
+        -- a test that has already been run
+        self.tests[name] = function() self:_assert_sub(f == 0) end
+    elseif type(f) == "string" then
+        -- a file containing tests
+        self:add(dofile(f), f)
     else
-        error('Tester:add(f) expects a function or a table of functions')
+        error('Tester:add(f) expects a function, a table of functions, a pre-computed test result, or a filename')
     end
     return self
 end

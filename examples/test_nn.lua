@@ -5,7 +5,7 @@ require 'nn'
 
 test = {}
 
-tester = totem.Tester()
+local tester = totem.Tester()
 
 
 local function net()
@@ -25,4 +25,4 @@ function test.minibatch()
 end
 
 
-tester:add(test):run()
+return tester:add(test):run()

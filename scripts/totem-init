@@ -17,9 +17,9 @@ echo "#!/usr/bin/env th
 
 require 'totem'
 
-test = {}
+local test = {}
 
-tester = totem.Tester()
+local tester = totem.Tester()
 
 
 function test.A()
@@ -30,6 +30,6 @@ end
 -- add more tests by adding to the 'test' table
 
 
-tester:add(test):run()" >> $file
+return tester:add(test):run()" >> $file
 
 chmod +x $file

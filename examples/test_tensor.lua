@@ -4,7 +4,7 @@ require 'totem'
 
 test = {}
 
-tester = totem.Tester()
+local tester = totem.Tester()
 
 function test.Dimension()
     local a = torch.Tensor(1,2)
@@ -34,4 +34,4 @@ function test.SameValues()
     tester:assertTensorNe(a, b, 1e-16, 'a ~= b')
 end
 
-tester:add(test):run()
+return tester:add(test):run()
