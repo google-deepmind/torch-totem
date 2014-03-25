@@ -620,7 +620,13 @@ function Tester:run(tests)
     else
         status = self:_run(self:_getTests(tests))
     end
-    os.exit(status)
+    -- Detect whether we're running directly from a top-level script. This
+    -- will not work for e.g. th which is an interpreter defined in lua
+    if debug.getinfo(3) then
+        return status
+    else
+        os.exit(status)
+    end
 end
 
 
