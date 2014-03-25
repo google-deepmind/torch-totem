@@ -151,7 +151,7 @@ function CopyModule:__init()
     self.output = nil
     self.gradInput = nil
 end
-    
+
 function CopyModule:updateOutput(input)
     self.output = self.output or nesting.cloneNested(input)
     nesting.resizeNestedAs(self.output, input)

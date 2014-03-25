@@ -195,8 +195,8 @@ end
 local function areTablesEqual(ta, tb)
 
     local function isIncludedIn(ta, tb)
-        if type(ta) ~= 'table' or type(tb) ~= 'table' then 
-            return ta == tb 
+        if type(ta) ~= 'table' or type(tb) ~= 'table' then
+            return ta == tb
         end
         for k, v in pairs(tb) do
             if not areTablesEqual(ta[k], v) then return false end
@@ -387,7 +387,7 @@ end
 
 
 function Tester:_eqStorage(got, expected, label, precision)
-    self:_assert_sub(#got == #expected, 
+    self:_assert_sub(#got == #expected,
         string.format("%s inconsistent storage size: %s != %s", label, #got, #expected))
     for i = 1, #expected do
         if not self:eq(got[i], expected[i], label, precision, true) then
@@ -559,7 +559,7 @@ Options:
   --full-tensors when printing tensors, always print in full even if large.
         Otherwise just print a summary for large tensors.
   --early-abort (optional boolean) abort execution on first error.
- 
+
 If any test names are specified only the named tests are run. Otherwise
 all the tests are run.
 
@@ -684,9 +684,9 @@ function Tester:_run(tests, summary, earlyAbort)
     for name,fn in pairs(tests) do
         self.curtestname = name
 
-        -- TODO: compute max length of name and cut it down to size if needed 
+        -- TODO: compute max length of name and cut it down to size if needed
         local strinit = coloured(string.format(cfmt,i), c.cyan)
-                      .. self.curtestname .. ' ' 
+                      .. self.curtestname .. ' '
                       .. string.rep('.', NCOLS-6-2-cfmtlen-self.curtestname:len()) .. ' '
         io.write(strinit .. bracket(coloured('WAIT', c.cyan)))
         io.flush()
@@ -694,7 +694,7 @@ function Tester:_run(tests, summary, earlyAbort)
         local stat, message, pass = self:_pcall(fn)
         io.write('\r')
         io.write(strinit)
-      
+
         if not stat then
             self.testError[name] = 1
             io.write(bracket(coloured('ERROR', c.magenta)))
@@ -727,7 +727,7 @@ end
 Parameters:
 
 - `f` (function or table) add the function or every function in the table to
-   the test set. 
+   the test set.
 - `name` (optional string) name of test
 
 Return:

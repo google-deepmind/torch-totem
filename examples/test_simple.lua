@@ -3,7 +3,7 @@
 require 'totem'
 
 test = {}
- 
+
 tester = totem.Tester()
  
 function test.A()

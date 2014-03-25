@@ -5,7 +5,7 @@ require 'totem'
 test = {}
 
 tester = totem.Tester()
- 
+
 function test.Dimension()
     local a = torch.Tensor(1,2)
     local b = torch.Tensor(2)

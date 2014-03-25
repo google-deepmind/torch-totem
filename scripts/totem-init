@@ -23,7 +23,7 @@ tester = totem.Tester()
 
 
 function test.A()
-    -- add test code here, using tester:asserteq methods 
+    -- add test code here, using tester:asserteq methods
 end
 
 
