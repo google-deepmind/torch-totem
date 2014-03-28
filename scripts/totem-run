@@ -4,15 +4,17 @@ local totem = require 'totem'
 local paths = require 'paths'
 local lapp = require 'pl.lapp'
 
-local args = lapp([[Run tests
+local args = lapp([[Run all tests in a folder
+
+Usage:
+
+  arg[0] [--folder <testfolder>] [options] [test1 [test2...] ]
 
 Options:
 ]]
 ..totem.Tester.CLoptions..
 [[
-
-Argument:
-    --folder (string default '.') Folder containing the test scripts
+--folder (string default '.') Folder containing the test scripts
 
 ]])
 
