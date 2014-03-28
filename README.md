@@ -63,6 +63,10 @@ If any test names are specified only the named tests are run. Otherwise
 all the tests are run.
 ```
 
+Additionally the script `totem-run` can be used to run all test files (i.e.
+files with names of the form `test*.lua` in a directory (by default the current
+directory).
+
 ## Nesting tests
 
 It's possible to nest test cases. Individual test files are still assumed to be
