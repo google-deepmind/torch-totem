@@ -547,6 +547,17 @@ function Tester:_listTests(tests)
     end
 end
 
+Tester.CLoptions = [[
+    --list print the names of the available tests instead of running them.
+    --log-output (optional file-out) redirect compact test results to file.
+        This contains one line per test in the following format:
+        name #passed-assertions #failed-assertions #exceptions
+    --no-colour suppress colour output
+    --summary print only pass/fail status rather than full error messages.
+    --full-tensors when printing tensors, always print in full even if large.
+        Otherwise just print a summary for large tensors.
+    --early-abort (optional boolean) abort execution on first error.
+    ]]
 
 function Tester:_runCL(candidates)
 
@@ -558,15 +569,9 @@ Usage:
 
 Options:
 
-  --list print the names of the available tests instead of running them.
-  --log-output (optional file-out) redirect compact test results to file.
-        This contains one line per test in the following format:
-        name #passed-assertions #failed-assertions #exceptions
-  --no-colour suppress colour output
-  --summary print only pass/fail status rather than full error messages.
-  --full-tensors when printing tensors, always print in full even if large.
-        Otherwise just print a summary for large tensors.
-  --early-abort (optional boolean) abort execution on first error.
+]]
+..Tester.CLoptions..
+[[
 
 If any test names are specified only the named tests are run. Otherwise
 all the tests are run.
@@ -770,7 +775,7 @@ function Tester:add(f, name)
         -- a file containing tests
         self:add(dofile(f), f)
     else
-        error('Tester:add(f) expects a function, a table of functions, a pre-computed test result, or a filename')
+        error('Tester:add(f) expects a function, a table of functions, a pre-computed test result, or a filename.\nFound' .. tostring(f) .. ' instead for the test ' .. name)
     end
     return self
 end
