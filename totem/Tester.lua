@@ -775,7 +775,7 @@ function Tester:add(f, name)
         -- a file containing tests
         self:add(dofile(f), f)
     else
-        error('Tester:add(f) expects a function, a table of functions, a pre-computed test result, or a filename')
+        error('Tester:add(f) expects a function, a table of functions, a pre-computed test result, or a filename.\nFound' .. tostring(f) .. ' instead for the test ' .. name)
     end
     return self
 end
