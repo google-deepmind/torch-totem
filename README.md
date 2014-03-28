@@ -81,3 +81,16 @@ such files. For example
 will first run all the tests in each of the listed test files and then report
 the overall test results. Each test is considered to pass only if all of its
 subtests pass.
+
+
+## Running several tests
+
+The script `scripts/totem-run` will run all the files with a filename `test*.lua` that
+are inside the folder specified by the argument `--folder` (current folder by default).
+The rest of the arguments are passed to all the individual tests.
+
+ Example:
+
+ ```
+ totem-run --folder tests --summary
+ ```
