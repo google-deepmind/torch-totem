@@ -58,6 +58,8 @@ Options:
   --full-tensors when printing tensors, always print in full even if large.
         Otherwise just print a summary for large tensors.
   --early-abort (optional boolean) abort execution on first error.
+  --rethrow (optional boolean) errors make the program crash and propagate up
+        the stack
 
 If any test names are specified only the named tests are run. Otherwise
 all the tests are run.
