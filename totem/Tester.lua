@@ -30,8 +30,8 @@ function Tester:_failure(message)
     self.countasserts = self.countasserts + 1
     local name = self.curtestname
     self.assertionFail[name] = self.assertionFail[name] + 1
-    local ss = debug.traceback('tester',2)
-    ss = ss:match('.-\n([^\n]+\n[^\n]+)\n[^\n]+xpcall')
+    local ss = debug.traceback('tester',2) or ''
+    ss = ss:match('.-\n([^\n]+\n[^\n]+)\n[^\n]+xpcall') or ''
     if type(message) == 'function' then
         message = message()
     end
@@ -557,6 +557,8 @@ Tester.CLoptions = [[
     --full-tensors when printing tensors, always print in full even if large.
         Otherwise just print a summary for large tensors.
     --early-abort (optional boolean) abort execution on first error.
+    --rethrow (optional boolean) errors make the program crash and propagate up
+        the stack.
     ]]
 
 function Tester:_runCL(candidates)
@@ -609,7 +611,7 @@ all the tests are run.
         self:_listTests(tests)
         return 0
     else
-        local status = self:_run(tests, args.summary, args.early_abort)
+        local status = self:_run(tests, args.summary, args.early_abort, args.rethrow)
         if args.log_output then
             self:_logOutput(args.log_output, tests)
         end
@@ -681,7 +683,7 @@ local function countFormat(n)
 end
 
 
-function Tester:_run(tests, summary, earlyAbort)
+function Tester:_run(tests, summary, earlyAbort, rethrow)
 
     self.countasserts = 0
 
@@ -710,7 +712,16 @@ function Tester:_run(tests, summary, earlyAbort)
         io.write(strinit .. bracket(coloured('WAIT', c.cyan)))
         io.flush()
 
-        local stat, message, pass = self:_pcall(fn)
+        local stat, message, pass
+        if rethrow then
+            stat = true
+            local nerr = #self.errors
+            message = fn()
+            pass = nerr==#self.errors
+        else
+            stat, message, pass = self:_pcall(fn)
+        end
+
         io.write('\r')
         io.write(strinit)
 
