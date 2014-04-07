@@ -294,7 +294,7 @@ the original type.
 --]]
 function totem.nn.checkTypeCastable(tester, module, input, toType)
     local precision = 1e-6
-    origType = inputType(input)
+    local origType = inputType(input)
     toType = toType or 'torch.FloatTensor'
     local rngState = torch.getRNGState()
     local preOutput = module:updateOutput(input)
