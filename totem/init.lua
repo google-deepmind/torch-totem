@@ -1,3 +1,5 @@
+require 'torch'
+
 totem = {}
 
 function totem._isTensor(obj)
