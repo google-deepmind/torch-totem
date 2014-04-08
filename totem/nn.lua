@@ -296,11 +296,66 @@ function totem.nn.checkTypeCastable(tester, module, input, toType)
     local precision = 1e-6
     local origType = inputType(input)
     toType = toType or 'torch.FloatTensor'
+    local pretty = require 'pl.pretty'
+
+    -- recursively traverse an object and return the names of all objects of type
+    -- original and of type toType
+    local function findTensorsByType(obj, curlevel, accOrig, accToType)
+        curlevel = curlevel or 'self'
+        accOrig = accOrig or {}
+        accToType = accToType or {}
+        if type(obj) == 'table' then
+            for k, v in pairs(obj) do
+                accOrig, accToType = findTensorsByType(v, curlevel .. '.' .. k, accOrig, accToType)
+            end
+            return accOrig, accToType
+        elseif torch.typename(obj) and torch.typename(obj):find('Tensor') then
+            local obj_type = torch.typename(obj)
+            if obj_type == origType then
+                table.insert(accOrig, curlevel)
+            elseif obj_type == toType then
+                table.insert(accToType, curlevel)
+            else
+                -- I am not sure what the correct way to deal with objects that are tensors, but are neither of the original or the new type
+                tester.assert(false, 'found an object ' .. curlevel .. ' which is neither of from type or to type' )
+            end
+            return accOrig, accToType
+        end
+    end
+
+    local function castTableOfTensors(obj, desiredType)
+        if type(obj) == 'table' then
+            for k, v in pairs(obj) do
+                obj[k] = castTableOfTensors(v, desiredType)
+            end
+            return obj
+        elseif torch.typename(obj) then
+            return obj:type(desiredType)
+        else
+            tester:assert(false, 'the input contains something which is not a tensor')
+        end
+    end
+
     local rngState = torch.getRNGState()
     local preOutput = module:updateOutput(input)
     local gradOutput = produceRandomGradOutput(preOutput)
     local preGradInput = module:updateGradInput(input, gradOutput)
     tester:assertNoError(function() module:type(toType) end, "module cannot be cast to " .. toType)
+
+    -- check that all components of the tensor have been correctly cast
+    local origTypeTensors, newTypeTensors = findTensorsByType(module)
+    assert( #origTypeTensors == 0 , "after casting, module still contains objects of original type: " .. pretty.write(origType))
+    assert( #newTypeTensors > 0 , "after casting, module still contains no objects of new type: " .. pretty.write(newType))
+
+    -- run module forward and back in the cast state
+    local castInput = castTableOfTensors(input, toType)
+    local castOutput = module:forward(castInput)
+    local castGradOutput = castTableOfTensors(gradOutput, toType)
+    local castGradInput = module:updateGradInput(castInput, castGradOutput)
+    tester:eq( preOutput, castTableOfTensors(castOutput, origType), "cast module output differs from before casting", precision)
+    tester:eq( preGradInput, castTableOfTensors(castGradInput, origType), "cast module grad input differs from before casting", precision)
+
+    -- cast module back to original type
     tester:assertNoError(function() module:type(origType) end, "module cannot be base back to " .. origType)
     torch.setRNGState(rngState)
     local postOutput = module:updateOutput(input)
