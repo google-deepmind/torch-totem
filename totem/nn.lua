@@ -300,17 +300,33 @@ function totem.nn.checkTypeCastable(tester, module, input, toType)
     toType = toType or 'torch.FloatTensor'
     local pretty = require 'pl.pretty'
 
+    -- 
+    local function tableContains(table, element)
+        for _,v in pairs(table) do
+            if v == element then return true end
+        end
+        return false
+    end
+
     -- recursively traverse an object and return the names of all objects of type
-    -- original and of type toType
-    local function findTensorsByType(obj, curlevel, accOrig, accToType)
+    -- original and of type toType. Take care that circular references in the object
+    -- are avoided by keeping track of the objects we have already visited
+    local function findTensorsByType(obj, curlevel, accOrig, accToType, visitedObj)
         curlevel = curlevel or 'self'
         accOrig = accOrig or {}
         accToType = accToType or {}
+        visitedObj = visitedObj or {}
+
+        table.insert(visitedObj, obj)
         if type(obj) == 'table' then
             for k, v in pairs(obj) do
-                accOrig, accToType = findTensorsByType(v, curlevel .. '.' .. k, accOrig, accToType)
+                -- do not enter objects that we have already visited or ones that are labeled by a table
+                if (not tableContains(visitedObj, v)) and 
+                            (type(k) == 'number' or type(k) == 'string' ) then
+                    accOrig, accToType, visitedObj = findTensorsByType(v, curlevel .. '.' .. k, accOrig, accToType, visitedObj)
+                end
             end
-            return accOrig, accToType
+            return accOrig, accToType, visitedObj
         elseif torch.typename(obj) and torch.typename(obj):find('Tensor') then
             local obj_type = torch.typename(obj)
             if obj_type == origType then
@@ -321,7 +337,9 @@ function totem.nn.checkTypeCastable(tester, module, input, toType)
                 -- I am not sure what the correct way to deal with objects that are tensors, but are neither of the original or the new type
                 tester.assert(false, 'found an object ' .. curlevel .. ' which is neither of from type or to type' )
             end
-            return accOrig, accToType
+            return accOrig, accToType, visitedObj
+        else
+            return accOrig, accToType, visitedObj
         end
     end
 
@@ -345,9 +363,9 @@ function totem.nn.checkTypeCastable(tester, module, input, toType)
     tester:assertNoError(function() module:type(toType) end, "module cannot be cast to " .. toType)
 
     -- check that all components of the tensor have been correctly cast
-    local origTypeTensors, newTypeTensors = findTensorsByType(module)
-    assert( #origTypeTensors == 0 , "after casting, module still contains objects of original type: " .. pretty.write(origType))
-    assert( #newTypeTensors > 0 , "after casting, module still contains no objects of new type: " .. pretty.write(newType))
+    local origTypeTensors, newTypeTensors, _ = findTensorsByType(module)
+    assert( #origTypeTensors == 0 , "after casting, module still contains objects of original type: " .. pretty.write(origTypeTensors))
+    assert( #newTypeTensors > 0 , "after casting, module still contains no objects of new type: " .. pretty.write(newTypeTensors))
 
     -- run module forward and back in the cast state
     local castInput = castTableOfTensors(input, toType)
