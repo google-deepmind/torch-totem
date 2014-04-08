@@ -286,10 +286,12 @@ Parameters:
 - `input` (tensor or table of tensors) inputs to `module`
 - `toType` (optional string, default 'torch.FloatTensor') type to which module should be cast
 
-This test fails if either the cast operation itself fails (i.e.
-`module.type()`) or if the result of a forward update of the module differs
+This test fails if the cast operation itself fails (i.e.
+`module.type()`), or  if the result of a forward update of the module differs
 significantly before and after having been cast to `toType` and back again to
-the original type.
+the original type, or if the result of a forward update of the module after being
+cast to `toType` differs significantly from before the cast, or if after casting 
+to `toType`, the module still contains tensors of the original type. 
 
 --]]
 function totem.nn.checkTypeCastable(tester, module, input, toType)
