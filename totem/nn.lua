@@ -378,6 +378,8 @@ function totem.nn.checkTypeCastable(tester, module, input, toType)
     -- cast module back to original type
     tester:assertNoError(function() module:type(origType) end, "module cannot be base back to " .. origType)
     torch.setRNGState(rngState)
+    castTableOfTensors(input, origType)
+    castTableOfTensors(gradOutput, origType)
     local postOutput = module:updateOutput(input)
     local postGradInput = module:updateGradInput(input, gradOutput)
     tester:eq(preOutput, postOutput, "module output differs before and after typecast", precision)
