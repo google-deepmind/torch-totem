@@ -14,7 +14,8 @@ Options:
 ]]
 ..totem.Tester.CLoptions..
 [[
---folder (string default '.') Folder containing the test scripts
+--folder (string default '.') Folder containing the test scripts.
+    Only files named test*.lua will be run.
 
 ]])
 
@@ -41,7 +42,7 @@ local files = paths.dir(args.folder)
 if files then
     local tester = totem.Tester()
     for k,v in pairs(files) do
-        if string.match(v, 'test.*%.lua') then
+        if string.match(v, 'test.*%.lua') == v then
             print(args.folder..v)
             tester:add(args.folder..v)
         end
