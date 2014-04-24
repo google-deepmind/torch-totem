@@ -42,7 +42,7 @@ local files = paths.dir(args.folder)
 if files then
     local tester = totem.Tester()
     for k,v in pairs(files) do
-        if string.match(v, 'test.*%.lua') == v then
+        if string.match(v, '^test.*%.lua$') then
             print(args.folder..v)
             tester:add(args.folder..v)
         end
