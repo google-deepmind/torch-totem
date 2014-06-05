@@ -142,7 +142,7 @@ end
 
 -- The CopyModule is used in totem.nn.checkGradients to get
 -- non-shared inputs and non-reassigned module.gradInput.
-local nesting = require 'nngraph/nesting'
+local nesting = require 'nngraph.nesting'
 require 'nn'
 local CopyModule, CopyModuleParent = torch.class('totem.nn.CopyModule', 'nn.Module')
 
