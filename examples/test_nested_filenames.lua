@@ -2,7 +2,6 @@
 
 require 'totem'
 
-local test = {}
 local tester = totem.Tester()
 tester:add('test_nn.lua')
 tester:add('test_simple.lua')
