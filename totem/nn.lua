@@ -368,6 +368,7 @@ function totem.nn.checkTypeCastable(tester, module, input, toType)
     assert( #newTypeTensors > 0 , "after casting, module still contains no objects of new type: " .. pretty.write(newTypeTensors))
 
     -- run module forward and back in the cast state
+    torch.setRNGState(rngState)
     local castInput = castTableOfTensors(input, toType)
     local castOutput = module:forward(castInput)
     local castGradOutput = castTableOfTensors(gradOutput, toType)
