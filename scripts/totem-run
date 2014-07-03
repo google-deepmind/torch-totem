@@ -1,4 +1,4 @@
-#!/usr/bin/env th
+#!/usr/bin/env luajit
 
 local totem = require 'totem'
 local paths = require 'paths'
