@@ -335,7 +335,7 @@ function totem.nn.checkTypeCastable(tester, module, input, toType)
                 table.insert(accToType, curlevel)
             else
                 -- I am not sure what the correct way to deal with objects that are tensors, but are neither of the original or the new type
-                tester.assert(false, 'found an object ' .. curlevel .. ' which is neither of from type or to type' )
+                tester:assert(false, 'found an object ' .. curlevel .. ' which is neither of from type or to type' )
             end
             return accOrig, accToType, visitedObj
         else
