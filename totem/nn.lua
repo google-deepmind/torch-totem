@@ -169,17 +169,7 @@ function CopyModule:updateGradInput(input, gradOutput)
 end
 
 
-
---[[ Checks all computed gradients, i.e., the gradient w.r.t. input and the gradient w.r.t. parameters.
-
-Parameters:
-
-- `module` (nn.Module instance)
-- `input` input to `module`, either a tensor or a table of tensors
-
-The module can output either a tensor or a table of tensors.
-]]
-function totem.nn.checkGradients(tester, module, input)
+local function checkGradients(tester, module, input, params_list)
     module = nn.Sequential()
         :add(CopyModule:new())
         :add(module)
@@ -190,7 +180,7 @@ function totem.nn.checkGradients(tester, module, input)
     ensureGradInput(module, input)
 
     local gradOutput = produceRandomGradOutput(module.output)
-    for _, pair in ipairs(extractParamTensors(module, input)) do
+    for _, pair in ipairs(params_list) do
         local params, gradParams, paramName = unpack(pair)
         -- The gradient with respect to the parameters
         -- will be accumulated to non-zero initial gradParams.
@@ -210,6 +200,34 @@ function totem.nn.checkGradients(tester, module, input)
 
         checkGrad(tester, feval, params, paramName)
     end
+end
+
+--[[ Checks gradients with respect to parameters. It doesn't compute gradients with respect to input
+
+Parameters:
+
+- `module` (nn.Module instance)
+- `input` input to `module`, either a tensor or a table of tensors
+
+The module can output either a tensor or a table of tensors.
+]]
+function totem.nn.checkParamGradients(tester, module, input)
+    local params_list = extractParamTensors(module)
+    checkGradients(tester, module, input, params_list)
+end
+
+--[[ Checks all computed gradients, i.e., the gradient w.r.t. input and the gradient w.r.t. parameters.
+
+Parameters:
+
+- `module` (nn.Module instance)
+- `input` input to `module`, either a tensor or a table of tensors
+
+The module can output either a tensor or a table of tensors.
+]]
+function totem.nn.checkGradients(tester, module, input)
+    local params_list = extractParamTensors(module, input)
+    checkGradients(tester, module, input, params_list)
 end
 
 

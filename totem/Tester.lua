@@ -345,10 +345,17 @@ function Tester:eq(got, expected, label, precision, ret)
     elseif type(expected) == "table" then
         return self:_eqTable(got, expected, label, precision)
     elseif type(expected) == "userdata" then
-        if got.nDimension then
+        if expected.nDimension then
+            if not got.nDimension then
+              self:_failure(string.format("%s return object has no field nDimension"))
+            end
             self:_eqSize(got, expected, label)
-            diff = got:clone():add(-1, expected):abs():max()
-            ok = diff <= precision
+            if got:nDimension() == 0 then
+              ok = true
+            else
+              diff = got:clone():add(-1, expected):abs():max()
+              ok = diff <= precision
+            end
         else
             return self:_eqStorage(got, expected, label, precision)
         end
