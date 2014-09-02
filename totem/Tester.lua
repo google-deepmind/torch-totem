@@ -640,7 +640,7 @@ function Tester:run(tests)
     if debug.getinfo(3) then
         return status
     else
-        os.exit(status)
+        os.exit(status, true)
     end
 end
 
