@@ -167,7 +167,7 @@ function Tester:assertTensorEq(ta, tb, condition, message, neg)
         return
     end
 
-    local diff = ta:clone():add(-1, tb)
+    local diff = ta:clone():double():add(-1, tb:double())
     local err = diff:abs():max()
     local errMessage = string.format('%s\n%s  val=%s, condition=%s',
                                      message, ' TensorEQ(==) violation ',
