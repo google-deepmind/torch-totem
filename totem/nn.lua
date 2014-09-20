@@ -290,17 +290,16 @@ This test fails if the cast operation itself fails (i.e.
 `module.type()`), or  if the result of a forward update of the module differs
 significantly before and after having been cast to `toType` and back again to
 the original type, or if the result of a forward update of the module after being
-cast to `toType` differs significantly from before the cast, or if after casting 
-to `toType`, the module still contains tensors of the original type. 
+cast to `toType` differs significantly from before the cast, or if after casting
+to `toType`, the module still contains tensors of the original type.
 
 --]]
-function totem.nn.checkTypeCastable(tester, module, input, toType)
-    local precision = 1e-6
+function totem.nn.checkTypeCastable(tester, module, input, toType, precision)
+    precision = precision or 1e-6
     local origType = inputType(input)
     toType = toType or 'torch.FloatTensor'
     local pretty = require 'pl.pretty'
 
-    -- 
     local function tableContains(table, element)
         for _,v in pairs(table) do
             if v == element then return true end
@@ -321,7 +320,7 @@ function totem.nn.checkTypeCastable(tester, module, input, toType)
         if type(obj) == 'table' then
             for k, v in pairs(obj) do
                 -- do not enter objects that we have already visited or ones that are labeled by a table
-                if (not tableContains(visitedObj, v)) and 
+                if (not tableContains(visitedObj, v)) and
                             (type(k) == 'number' or type(k) == 'string' ) then
                     accOrig, accToType, visitedObj = findTensorsByType(v, curlevel .. '.' .. k, accOrig, accToType, visitedObj)
                 end
@@ -403,8 +402,8 @@ This test fails if either the serialization operation itself fails (using
 significantly before and after a roundtrip to disk.
 
 --]]
-function totem.nn.checkSerializable(tester, module, input)
-    local precision = 1e-6
+function totem.nn.checkSerializable(tester, module, input, precision)
+    precision = precision or 1e-6
     local rngState = torch.getRNGState()
     local preOutput = module:updateOutput(input)
     local gradOutput = produceRandomGradOutput(preOutput)
