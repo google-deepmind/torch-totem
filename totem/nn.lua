@@ -111,7 +111,7 @@ local function computeNumGradParams(feval, params)
     assert(flatParams:nElement() == params:nElement(),
         "shared storage of params is not supported")
 
-    local numGradParams = torch.Tensor(params:nElement())
+    local flatGradParams = params.new(params:nElement())
     local small = (params:type() == 'torch.DoubleTensor') and 1e-6 or 1e-3
     for i = 1, flatParams:nElement() do
         local origVal = flatParams[i]
@@ -121,9 +121,11 @@ local function computeNumGradParams(feval, params)
         local loss2 = feval(flatParams)
         flatParams[i] = origVal
 
-        numGradParams[i] = (loss2 - loss1) / (2 * small)
+        flatGradParams[i] = (loss2 - loss1) / (2 * small)
     end
-    return numGradParams:reshape(params:size()):typeAs(params)
+    local numGradParams = params.new(flatGradParams:storage(),
+        params:storageOffset(), params:size(), params:stride())
+    return numGradParams
 end
 
 
