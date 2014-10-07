@@ -38,7 +38,7 @@ function Tester:_failure(message)
     if message then
         self.errors[#self.errors+1] = self.curtestname .. '\n' .. message .. '\n' .. ss .. '\n'
     else
-        self.errors[#self.errors+1] = true -- no message to print
+        self.errors[#self.errors+1] = self.curtestname .. '\n' .. ss .. '\n'
     end
 end
 
