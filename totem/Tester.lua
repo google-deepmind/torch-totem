@@ -22,6 +22,7 @@ function Tester:_success()
     self.countasserts = self.countasserts + 1
     local name = self.curtestname
     self.assertionPass[name] = self.assertionPass[name] + 1
+    return true
 end
 
 
@@ -40,6 +41,7 @@ function Tester:_failure(message)
     else
         self.errors[#self.errors+1] = self.curtestname .. '\n' .. ss .. '\n'
     end
+    return false
 end
 
 
@@ -53,16 +55,16 @@ Parameters:
 ]]
 function Tester:_assert_sub (condition, message)
     if condition then
-        self:_success(message)
+        return self:_success(message)
     else
-        self:_failure(message)
+        return self:_failure(message)
     end
 end
 
 
 -- Assert that a condition is true
 function Tester:assert(condition, message)
-    self:_assert_sub(condition,
+    return self:_assert_sub(condition,
             string.format('%s\n%s  condition=%s', message, ' BOOL violation ',
                 tostring(condition)))
 end
@@ -70,7 +72,7 @@ end
 
 -- Assert that `val` < `condition`
 function Tester:assertlt(val, condition, message)
-    self:_assert_sub(val < condition,
+    return self:_assert_sub(val < condition,
             string.format('%s\n%s  val=%s, condition=%s', message, ' LT(<) violation ',
                 tostring(val), tostring(condition)))
 end
@@ -78,7 +80,7 @@ end
 
 -- Assert that `val` > `condition`
 function Tester:assertgt(val, condition, message)
-   self:_assert_sub(val > condition,
+   return self:_assert_sub(val > condition,
         string.format('%s\n%s  val=%s, condition=%s',message,' GT(>) violation ',
             tostring(val), tostring(condition)))
 end
@@ -86,7 +88,7 @@ end
 
 -- Assert that `val` <= `condition`
 function Tester:assertle(val, condition, message)
-    self:_assert_sub(val <= condition,
+    return self:_assert_sub(val <= condition,
             string.format('%s\n%s  val=%s, condition=%s', message, ' LE(<=) violation ',
                 tostring(val), tostring(condition)))
 end
@@ -94,7 +96,7 @@ end
 
 -- Assert that `val` >= `condition`
 function Tester:assertge(val, condition, message)
-    self:_assert_sub(val >= condition,
+    return self:_assert_sub(val >= condition,
             string.format('%s\n%s  val=%s, condition=%s', message, ' GE(>=) violation ',
                 tostring(val), tostring(condition)))
 end
@@ -102,7 +104,7 @@ end
 
 -- Assert that `actual` == `expected`
 function Tester:asserteq(actual, expected, message)
-    self:_assert_sub(actual == expected,
+    return self:_assert_sub(actual == expected,
             string.format('%s\n%s  actual=%s, expected=%s', message, ' EQ(==) violation ',
                 tostring(actual), tostring(expected)))
 end
@@ -112,7 +114,7 @@ end
 function Tester:assertalmosteq(a, b, condition, message)
     condition = condition or 1e-16
     local err = math.abs(a-b)
-    self:_assert_sub(err < condition,
+    return self:_assert_sub(err < condition,
             string.format('%s\n%s  val=%s, condition=%s', message, ' ALMOST_EQ(==) violation ',
                 tostring(err), tostring(condition)))
 end
@@ -120,7 +122,7 @@ end
 
 -- Assert that `val` ~= `condition`
 function Tester:assertne (val, condition, message)
-    self:_assert_sub(val ~= condition,
+    return self:_assert_sub(val ~= condition,
             function ()
                 return string.format('%s\n%s  val=%s, condition=%s', message, ' NE(~=) violation ',
                     tostring(val), tostring(condition))
@@ -155,16 +157,14 @@ function Tester:assertTensorEq(ta, tb, condition, message, neg)
     end
 
     if ta:dim() ~= tb:dim() then
-        failure(self, string.format('%s\n%s', message, 'The tensors have different dimensions'))
-        return
+        return failure(self, string.format('%s\n%s', message, 'The tensors have different dimensions'))
     end
     local sizea = torch.DoubleTensor(ta:size():totable())
     local sizeb = torch.DoubleTensor(tb:size():totable())
     local sizediff = sizea:clone():add(-1, sizeb)
     local sizeerr = sizediff:abs():max()
     if sizeerr ~= 0 then
-        failure(self, string.format('%s\n%s', message, 'The tensors have different sizes'))
-        return
+        return failure(self, string.format('%s\n%s', message, 'The tensors have different sizes'))
     end
 
     local function ensureNotByte(t)
@@ -186,9 +186,9 @@ function Tester:assertTensorEq(ta, tb, condition, message, neg)
                                      tostring(err),
                                      tostring(condition))
     if err <= condition then
-        success(self, errMessage)
+        return success(self, errMessage)
     else
-        failure(self, errMessage)
+        return failure(self, errMessage)
     end
 end
 
@@ -236,7 +236,7 @@ Parameters:
 
 --]]
 function Tester:assertTableEq(actual, expected, message)
-    self:_assert_sub(areTablesEqual(actual, expected),
+    return self:_assert_sub(areTablesEqual(actual, expected),
             string.format('%s\n%s actual=%s, expected=%s', message, ' TableEQ(==) violation ',
                 tostring(actual), tostring(expected)))
 end
@@ -252,7 +252,7 @@ Parameters:
 
 --]]
 function Tester:assertTableNe(ta, tb, message)
-    self:_assert_sub(not areTablesEqual(ta, tb),
+    return self:_assert_sub(not areTablesEqual(ta, tb),
             string.format('%s\n%s ta=%s, tb=%s', message, ' TableNE(~=) violation ',
                 tostring(ta), tostring(tb)))
 end
@@ -324,7 +324,7 @@ Parameters:
 ]]
 function Tester:assertErrorObj(f, errcomp, message, condition)
     local status, err = pcall(f)
-    self:_assert_sub(status == (condition or false) and errcomp(err),
+    return self:_assert_sub(status == (condition or false) and errcomp(err),
             string.format('%s\n%s  err=%s', message,' ERROR violation ', tostring(err)))
 end
 
