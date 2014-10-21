@@ -223,10 +223,10 @@ Parameters:
 - `message` (string)
 
 --]]
-function Tester:assertTableEq(ta, tb, message)
-    self:_assert_sub(areTablesEqual(ta, tb),
+function Tester:assertTableEq(val, condition, message)
+    self:_assert_sub(areTablesEqual(val, condition),
             string.format('%s\n%s val=%s, condition=%s', message, ' TableEQ(==) violation ',
-                tostring(err), tostring(condition)))
+                tostring(val), tostring(condition)))
 end
 
 
@@ -239,10 +239,10 @@ Parameters:
 - `message` (string)
 
 --]]
-function Tester:assertTableNe(ta, tb, message)
-    self:_assert_sub(not areTablesEqual(ta, tb),
+function Tester:assertTableNe(val, condition, message)
+    self:_assert_sub(not areTablesEqual(val, condition),
             string.format('%s\n%s val=%s, condition=%s', message, ' TableEQ(==) violation ',
-                tostring(err), tostring(condition)))
+                tostring(val), tostring(condition)))
 end
 
 
