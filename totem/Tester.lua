@@ -100,11 +100,11 @@ function Tester:assertge(val, condition, message)
 end
 
 
--- Assert that `val` == `condition`
-function Tester:asserteq(expected, actual, message)
-    self:_assert_sub(expected == actual,
-            string.format('%s\n%s  expected=%s, actual=%s', message, ' EQ(==) violation ',
-                tostring(expected), tostring(actual)))
+-- Assert that `actual` == `expected`
+function Tester:asserteq(actual, expected, message)
+    self:_assert_sub(actual == expected,
+            string.format('%s\n%s  actual=%s, expected=%s', message, ' EQ(==) violation ',
+                tostring(actual), tostring(expected)))
 end
 
 
@@ -218,15 +218,15 @@ end
 
 Parameters:
 
-- `ta` (table)
-- `tb` (table)
+- `actual` (table)
+- `expected` (table)
 - `message` (string)
 
 --]]
-function Tester:assertTableEq(expected, actual, message)
-    self:_assert_sub(areTablesEqual(expected, actual),
-            string.format('%s\n%s expected=%s, actual=%s', message, ' TableEQ(==) violation ',
-                tostring(expected), tostring(actual)))
+function Tester:assertTableEq(actual, expected, message)
+    self:_assert_sub(areTablesEqual(actual, expected),
+            string.format('%s\n%s actual=%s, expected=%s', message, ' TableEQ(==) violation ',
+                tostring(actual), tostring(expected)))
 end
 
 
