@@ -34,4 +34,11 @@ function test.SameValues()
     tester:assertTensorNe(a, b, 1e-16, 'a ~= b')
 end
 
+function test.byteTensor()
+    local a = torch.zeros(1, 2):byte()
+    local b = torch.zeros(1, 2):byte()
+    tester:assertTensorEq(a, b, 1e-16, 'a == b')
+    tester:assertTensorNe(a, b, 1e-16, 'a ~= b')
+end
+
 return tester:add(test):run()

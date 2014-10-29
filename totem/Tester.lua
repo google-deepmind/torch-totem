@@ -167,6 +167,18 @@ function Tester:assertTensorEq(ta, tb, condition, message, neg)
         return
     end
 
+    local function ensureNotByte(t)
+      -- Ensure tensor is not a byte tensor (convert to double in this case).
+        if t:type() == 'torch.ByteTensor' then
+            return t:double()
+        else
+            return t
+        end
+    end
+
+    ta = ensureNotByte(ta)
+    tb = ensureNotByte(tb)
+
     local diff = ta:clone():add(-1, tb)
     local err = diff:abs():max()
     local errMessage = string.format('%s\n%s  val=%s, condition=%s',
