@@ -140,18 +140,29 @@ local function checkGrad(tester, feval, params, paramName)
     tester:assertTensorEq(gradParams, numGradParams, precision, msg)
 end
 
-
+-- Checks that the obtained gradInput has the same sizes as the input.
+local function checkSizes(tester, input, gradInput)
+    if isTensor(input) then
+        tester:eq(input:size(), gradInput:size(), "wrong gradInput size")
+    else
+        for key, child in pairs(input) do
+            assert(gradInput[key] ~= nil, "missing gradInput element")
+            checkSizes(tester, child, gradInput[key])
+        end
+    end
+end
 
 -- The CopyModule is used in totem.nn.checkGradients to get
 -- non-shared inputs and non-reassigned module.gradInput.
 local nesting = require 'nngraph.nesting'
 require 'nn'
-local CopyModule, CopyModuleParent = torch.class('totem.nn.CopyModule', 'nn.Module')
+local CopyModule, CopyModuleParent = torch.class('totem._nn_CopyModule', 'nn.Module')
 
-function CopyModule:__init()
+function CopyModule:__init(tester)
     CopyModuleParent.__init(self)
     self.output = nil
     self.gradInput = nil
+    self.tester = tester
 end
 
 function CopyModule:updateOutput(input)
@@ -163,6 +174,7 @@ function CopyModule:updateOutput(input)
 end
 
 function CopyModule:updateGradInput(input, gradOutput)
+    checkSizes(self.tester, input, gradOutput)
     self.gradInput = self.gradInput or nesting.cloneNested(input)
     nesting.resizeNestedAs(self.gradInput, input)
     nesting.fillNested(self.gradInput, 0)
@@ -183,7 +195,7 @@ The module can output either a tensor or a table of tensors.
 ]]
 function totem.nn.checkGradients(tester, module, input)
     module = nn.Sequential()
-        :add(CopyModule:new())
+        :add(totem._nn_CopyModule(tester))
         :add(module)
 
     -- A fixed seed is used for the gradient checking.
