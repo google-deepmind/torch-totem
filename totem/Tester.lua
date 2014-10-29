@@ -100,11 +100,11 @@ function Tester:assertge(val, condition, message)
 end
 
 
--- Assert that `val` == `condition`
-function Tester:asserteq(val, condition, message)
-    self:_assert_sub(val == condition,
-            string.format('%s\n%s  val=%s, condition=%s', message, ' EQ(==) violation ',
-                tostring(val), tostring(condition)))
+-- Assert that `actual` == `expected`
+function Tester:asserteq(actual, expected, message)
+    self:_assert_sub(actual == expected,
+            string.format('%s\n%s  actual=%s, expected=%s', message, ' EQ(==) violation ',
+                tostring(actual), tostring(expected)))
 end
 
 
@@ -218,15 +218,15 @@ end
 
 Parameters:
 
-- `ta` (table)
-- `tb` (table)
+- `actual` (table)
+- `expected` (table)
 - `message` (string)
 
 --]]
-function Tester:assertTableEq(ta, tb, message)
-    self:_assert_sub(areTablesEqual(ta, tb),
-            string.format('%s\n%s val=%s, condition=%s', message, ' TableEQ(==) violation ',
-                tostring(err), tostring(condition)))
+function Tester:assertTableEq(actual, expected, message)
+    self:_assert_sub(areTablesEqual(actual, expected),
+            string.format('%s\n%s actual=%s, expected=%s', message, ' TableEQ(==) violation ',
+                tostring(actual), tostring(expected)))
 end
 
 
@@ -241,8 +241,8 @@ Parameters:
 --]]
 function Tester:assertTableNe(ta, tb, message)
     self:_assert_sub(not areTablesEqual(ta, tb),
-            string.format('%s\n%s val=%s, condition=%s', message, ' TableEQ(==) violation ',
-                tostring(err), tostring(condition)))
+            string.format('%s\n%s ta=%s, tb=%s', message, ' TableNE(~=) violation ',
+                tostring(ta), tostring(tb)))
 end
 
 
