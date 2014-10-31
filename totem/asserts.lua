@@ -35,17 +35,17 @@ function asserts.assertTensorEq(ta, tb, condition, neg)
         return false, 'The tensors have different sizes'
     end
 
-    local function ensureNotByte(t)
-      -- Ensure tensor is not a byte tensor (convert to double in this case).
-        if t:type() == 'torch.ByteTensor' then
+    local function ensureHasAbs(t)
+      -- Byte, Char and Short Tensors don't have abs
+        if not t.abs then
             return t:double()
         else
             return t
         end
     end
 
-    ta = ensureNotByte(ta)
-    tb = ensureNotByte(tb)
+    ta = ensureHasAbs(ta)
+    tb = ensureHasAbs(tb)
 
     local diff = ta:clone():add(-1, tb)
     local err = diff:abs():max()
