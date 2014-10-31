@@ -76,3 +76,38 @@ The tensors are considered unequal if the maximum pointwise difference >= condit
 function asserts.assertTensorNe(ta, tb, condition)
   return asserts.assertTensorEq(ta, tb, condition, true)
 end
+
+
+local function isIncludedIn(ta, tb)
+    if type(ta) ~= 'table' or type(tb) ~= 'table' then
+        return ta == tb
+    end
+    for k, v in pairs(tb) do
+        if not asserts.assertTableEq(ta[k], v) then return false end
+    end
+    return true
+end
+
+--[[ Assert that two tables are equal (comparing values, recursively)
+
+Parameters:
+
+- `actual` (table)
+- `expected` (table)
+
+]]
+function asserts.assertTableEq(ta, tb)
+    return isIncludedIn(ta, tb) and isIncludedIn(tb, ta)
+end
+
+--[[ Assert that two tables are *not* equal (comparing values, recursively)
+
+Parameters:
+
+- `actual` (table)
+- `expected` (table)
+
+]]
+function asserts.assertTableNe(ta, tb)
+    return not asserts.assertTableEq(ta, tb)
+end

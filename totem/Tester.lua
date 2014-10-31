@@ -168,22 +168,6 @@ function Tester:assertTensorNe(ta, tb, condition, message)
 end
 
 
-local function areTablesEqual(ta, tb)
-
-    local function isIncludedIn(ta, tb)
-        if type(ta) ~= 'table' or type(tb) ~= 'table' then
-            return ta == tb
-        end
-        for k, v in pairs(tb) do
-            if not areTablesEqual(ta[k], v) then return false end
-        end
-        return true
-    end
-
-    return isIncludedIn(ta, tb) and isIncludedIn(tb, ta)
-end
-
-
 --[[ Assert that two tables are equal (comparing values, recursively)
 
 Parameters:
@@ -192,9 +176,9 @@ Parameters:
 - `expected` (table)
 - `message` (string)
 
---]]
+]]
 function Tester:assertTableEq(actual, expected, message)
-    return self:_assert_sub(areTablesEqual(actual, expected),
+    return self:_assert_sub(asserts.assertTableEq(actual, expected),
             string.format('%s\n%s actual=%s, expected=%s', message, ' TableEQ(==) violation ',
                 tostring(actual), tostring(expected)))
 end
@@ -208,9 +192,9 @@ Parameters:
 - `tb` (table)
 - `message` (string)
 
---]]
+]]
 function Tester:assertTableNe(ta, tb, message)
-    return self:_assert_sub(not areTablesEqual(ta, tb),
+    return self:_assert_sub(asserts.assertTableNe(ta, tb),
             string.format('%s\n%s ta=%s, tb=%s', message, ' TableNE(~=) violation ',
                 tostring(ta), tostring(tb)))
 end
