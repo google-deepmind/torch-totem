@@ -6,9 +6,7 @@ local NCOLS = 80
 
 
 local isTensor = totem._isTensor
-
-local asserts = {}
-totem.asserts = asserts
+local asserts = totem.asserts
 
 
 local Tester = torch.class('totem.Tester')
@@ -133,6 +131,7 @@ function Tester:assertne (val, condition, message)
 end
 
 
+
 --[[ Assert tensor equality
 
 Parameters:
@@ -164,60 +163,9 @@ The tensors are considered unequal if the maximum pointwise difference >= condit
 
 ]]
 function Tester:assertTensorNe(ta, tb, condition, message)
-    local success, subMessage = asserts.assertTensorEq(ta, tb, condition, true)
+    local success, subMessage = asserts.assertTensorNe(ta, tb, condition)
     return self:_assert_sub(success, string.format("%s\n%s", message, subMessage))
 end
-
-function asserts.assertTensorEq(ta, tb, condition, neg)
-    -- If neg is true, we invert success and failure
-    -- This allows to easily implement Tester:assertTensorNe
-    local invert = false
-    if neg == nil then
-      invert = false
-    else
-      invert = true
-    end
-
-    if ta:dim() ~= tb:dim() then
-        return false, 'The tensors have different dimensions'
-            --string.format('%s\n%s', message, 'The tensors have different dimensions')
-    end
-    local sizea = torch.DoubleTensor(ta:size():totable())
-    local sizeb = torch.DoubleTensor(tb:size():totable())
-    local sizediff = sizea:clone():add(-1, sizeb)
-    local sizeerr = sizediff:abs():max()
-    if sizeerr ~= 0 then
-        return false, 'The tensors have different sizes'
-        --return failure(self, string.format('%s\n%s', message, 'The tensors have different sizes'))
-    end
-
-    local function ensureNotByte(t)
-      -- Ensure tensor is not a byte tensor (convert to double in this case).
-        if t:type() == 'torch.ByteTensor' then
-            return t:double()
-        else
-            return t
-        end
-    end
-
-    ta = ensureNotByte(ta)
-    tb = ensureNotByte(tb)
-
-    local diff = ta:clone():add(-1, tb)
-    local err = diff:abs():max()
-    local violation = invert and 'TensorNE(==)' or ' TensorEQ(==)'
-    local errMessage = string.format('%s violation: val=%s, condition=%s',
-                                     violation,
-                                     tostring(err),
-                                     tostring(condition))
-
-    if invert then
-        return not (err <= condition), errMessage
-    else
-        return err <= condition , errMessage
-    end
-end
-
 
 
 local function areTablesEqual(ta, tb)
