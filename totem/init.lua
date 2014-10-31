@@ -20,8 +20,4 @@ setmetatable(totem, mt)
 
 torch.include('totem', 'Tester.lua')
 
-totem.asserts = totem.Tester()
-totem.asserts._success = function(self, message) return true, message end
-totem.asserts._failure = function(self, message) return false, message end
-
 return totem

@@ -7,6 +7,9 @@ local NCOLS = 80
 
 local isTensor = totem._isTensor
 
+local asserts = {}
+totem.asserts = asserts
+
 
 local Tester = torch.class('totem.Tester')
 
@@ -138,33 +141,54 @@ Parameters:
 - `tb` (tensor)
 - `condition` (number) maximum pointwise difference between `a` and `b`
 - `message` (string)
-- `neg` (boolean) allows to invert the output. If this argument is true, then
-        failures become successes and viceversa. See Tester:assertTensorNe.
 
 Asserts that the maximum pointwise difference between `a` and `b` is less than
 or equal to `condition`.
 
 ]]
-function Tester:assertTensorEq(ta, tb, condition, message, neg)
-    local success = self._success
-    local failure = self._failure
-    -- If neg is true, we invert the success and failure functions
+function Tester:assertTensorEq(ta, tb, condition, message)
+    local success, subMessage = asserts.assertTensorEq(ta, tb, condition)
+    return self:_assert_sub(success, string.format("%s\n%s", message, subMessage))
+end
+
+--[[ Assert tensor inequality
+
+Parameters:
+
+- `ta` (tensor)
+- `tb` (tensor)
+- `condition` (number)
+- `message` (string)
+
+The tensors are considered unequal if the maximum pointwise difference >= condition.
+
+]]
+function Tester:assertTensorNe(ta, tb, condition, message)
+    local success, subMessage = asserts.assertTensorEq(ta, tb, condition, true)
+    return self:_assert_sub(success, string.format("%s\n%s", message, subMessage))
+end
+
+function asserts.assertTensorEq(ta, tb, condition, neg)
+    -- If neg is true, we invert success and failure
     -- This allows to easily implement Tester:assertTensorNe
-    if neg then
-        local temp = success
-        success = failure
-        failure = temp
+    local invert = false
+    if neg == nil then
+      invert = false
+    else
+      invert = true
     end
 
     if ta:dim() ~= tb:dim() then
-        return failure(self, string.format('%s\n%s', message, 'The tensors have different dimensions'))
+        return false, 'The tensors have different dimensions'
+            --string.format('%s\n%s', message, 'The tensors have different dimensions')
     end
     local sizea = torch.DoubleTensor(ta:size():totable())
     local sizeb = torch.DoubleTensor(tb:size():totable())
     local sizediff = sizea:clone():add(-1, sizeb)
     local sizeerr = sizediff:abs():max()
     if sizeerr ~= 0 then
-        return failure(self, string.format('%s\n%s', message, 'The tensors have different sizes'))
+        return false, 'The tensors have different sizes'
+        --return failure(self, string.format('%s\n%s', message, 'The tensors have different sizes'))
     end
 
     local function ensureNotByte(t)
@@ -181,33 +205,19 @@ function Tester:assertTensorEq(ta, tb, condition, message, neg)
 
     local diff = ta:clone():add(-1, tb)
     local err = diff:abs():max()
-    local errMessage = string.format('%s\n%s  val=%s, condition=%s',
-                                     message, ' TensorEQ(==) violation ',
+    local violation = invert and 'TensorNE(==)' or ' TensorEQ(==)'
+    local errMessage = string.format('%s violation: val=%s, condition=%s',
+                                     violation,
                                      tostring(err),
                                      tostring(condition))
-    if err <= condition then
-        return success(self, errMessage)
+
+    if invert then
+        return not (err <= condition), errMessage
     else
-        return failure(self, errMessage)
+        return err <= condition , errMessage
     end
 end
 
-
---[[ Assert tensor inequality
-
-Parameters:
-
-- `ta` (tensor)
-- `tb` (tensor)
-- `condition` (number)
-- `message` (string)
-
-The tensors are considered unequal if the maximum pointwise difference >= condition.
-
-]]
-function Tester:assertTensorNe(ta, tb, condition, message)
-    return self:assertTensorEq(ta, tb, condition, message, true)
-end
 
 
 local function areTablesEqual(ta, tb)
