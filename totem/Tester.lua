@@ -4,10 +4,7 @@ local c = {} -- dummy colour list
 
 local NCOLS = 80
 
-
 local isTensor = totem._isTensor
-local asserts = totem.asserts
-
 
 local Tester = torch.class('totem.Tester')
 
@@ -146,7 +143,7 @@ or equal to `condition`.
 
 ]]
 function Tester:assertTensorEq(ta, tb, condition, message)
-    local success, subMessage = asserts.assertTensorEq(ta, tb, condition)
+    local success, subMessage = totem.assertTensorEq(ta, tb, condition)
     return self:_assert_sub(success, string.format("%s\n%s", message, subMessage))
 end
 
@@ -163,7 +160,7 @@ The tensors are considered unequal if the maximum pointwise difference >= condit
 
 ]]
 function Tester:assertTensorNe(ta, tb, condition, message)
-    local success, subMessage = asserts.assertTensorNe(ta, tb, condition)
+    local success, subMessage = totem.assertTensorNe(ta, tb, condition)
     return self:_assert_sub(success, string.format("%s\n%s", message, subMessage))
 end
 
@@ -178,7 +175,7 @@ Parameters:
 
 ]]
 function Tester:assertTableEq(actual, expected, message)
-    return self:_assert_sub(asserts.assertTableEq(actual, expected),
+    return self:_assert_sub(totem.assertTableEq(actual, expected),
             string.format('%s\n%s actual=%s, expected=%s', message, ' TableEQ(==) violation ',
                 tostring(actual), tostring(expected)))
 end
@@ -194,7 +191,7 @@ Parameters:
 
 ]]
 function Tester:assertTableNe(ta, tb, message)
-    return self:_assert_sub(asserts.assertTableNe(ta, tb),
+    return self:_assert_sub(totem.assertTableNe(ta, tb),
             string.format('%s\n%s ta=%s, tb=%s', message, ' TableNE(~=) violation ',
                 tostring(ta), tostring(tb)))
 end

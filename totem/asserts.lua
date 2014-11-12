@@ -1,7 +1,3 @@
-
-local asserts = {}
-totem.asserts = asserts
-
 --[[ Assert tensor equality
 
 Parameters:
@@ -14,7 +10,7 @@ Asserts that the maximum pointwise difference between `a` and `b` is less than
 or equal to `condition`.
 
 ]]
-function asserts.assertTensorEq(ta, tb, condition, neg)
+function totem.assertTensorEq(ta, tb, condition, neg)
     -- If neg is true, we invert success and failure
     -- This allows to easily implement Tester:assertTensorNe
     local invert = false
@@ -73,8 +69,8 @@ Parameters:
 The tensors are considered unequal if the maximum pointwise difference >= condition.
 
 ]]
-function asserts.assertTensorNe(ta, tb, condition)
-  return asserts.assertTensorEq(ta, tb, condition, true)
+function totem.assertTensorNe(ta, tb, condition)
+  return totem.assertTensorEq(ta, tb, condition, true)
 end
 
 
@@ -83,7 +79,7 @@ local function isIncludedIn(ta, tb)
         return ta == tb
     end
     for k, v in pairs(tb) do
-        if not asserts.assertTableEq(ta[k], v) then return false end
+        if not totem.assertTableEq(ta[k], v) then return false end
     end
     return true
 end
@@ -96,7 +92,7 @@ Parameters:
 - `expected` (table)
 
 ]]
-function asserts.assertTableEq(ta, tb)
+function totem.assertTableEq(ta, tb)
     return isIncludedIn(ta, tb) and isIncludedIn(tb, ta)
 end
 
@@ -108,6 +104,6 @@ Parameters:
 - `expected` (table)
 
 ]]
-function asserts.assertTableNe(ta, tb)
-    return not asserts.assertTableEq(ta, tb)
+function totem.assertTableNe(ta, tb)
+    return not totem.assertTableEq(ta, tb)
 end
