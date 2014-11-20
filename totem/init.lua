@@ -2,10 +2,6 @@ require 'torch'
 
 totem = {}
 
-function totem._isTensor(obj)
-    return torch.typename(obj) and obj.nDimension ~= nil
-end
-
 local ondemand = {nn = true}
 local mt = {}
 

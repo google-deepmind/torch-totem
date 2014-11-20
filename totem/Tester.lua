@@ -4,8 +4,6 @@ local c = {} -- dummy colour list
 
 local NCOLS = 80
 
-local isTensor = totem._isTensor
-
 local Tester = torch.class('totem.Tester')
 
 function Tester:__init()
@@ -296,7 +294,7 @@ function Tester:eq(got, expected, label, precision, ret)
     elseif type(expected) == "table" then
         return self:_eqTable(got, expected, label, precision)
     elseif type(expected) == "userdata" then
-        if isTensor(got) then
+        if torch.isTensor(got) then
             self:_eqSize(got, expected, label)
             diff = got:clone():add(-1, expected):abs():max()
             ok = diff <= precision
@@ -545,7 +543,7 @@ all the tests are run.
     if not args.full_tensors then
         local _tostring = tostring
         tostring = function(x)
-            if isTensor(x) and x:nElement() > 256 then
+            if torch.isTensor(x) and x:nElement() > 256 then
                 local sz = _tostring(x:size(1))
                 for i = 2,x:nDimension() do
                     sz = sz .. 'x' .. _tostring(x:size(i))

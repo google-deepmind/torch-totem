@@ -1,8 +1,6 @@
 
 totem.nn = {}
 
-local isTensor = totem._isTensor
-
 local function inputType(t)
     return type(t) == 'table' and t[1]:type() or t:type()
 end
@@ -17,7 +15,7 @@ local function appendParamPairs(paramPairs, input, gradInput, namePrefix)
         return
     end
 
-    if isTensor(input) then
+    if torch.isTensor(input) then
         table.insert(paramPairs, {input, gradInput, namePrefix})
         return
     end
@@ -46,7 +44,7 @@ end
 -- Produce random gradOutput for the given output.
 -- The output can be a table of tensors.
 local function produceRandomGradOutput(output)
-    if isTensor(output) then
+    if torch.isTensor(output) then
         return torch.randn(output:size()):typeAs(output)
     elseif type(output) == 'number' then
         return torch.normal()
@@ -62,7 +60,7 @@ end
 
 
 local function calcLoss(output, gradOutput)
-    if isTensor(output) then
+    if torch.isTensor(output) then
         return output.dot(output, gradOutput)
     end
 
@@ -79,7 +77,7 @@ local function appendTensors(list, input)
     if input == nil or input == false then
         return
     end
-    if isTensor(input) then
+    if torch.isTensor(input) then
         table.insert(list, input)
         return
     end
@@ -142,7 +140,7 @@ end
 
 -- Checks that the obtained gradInput has the same sizes as the input.
 local function checkSizes(tester, input, gradInput)
-    if isTensor(input) then
+    if torch.isTensor(input) then
         tester:eq(input:size(), gradInput:size(), "wrong gradInput size")
     else
         for key, child in pairs(input) do
@@ -239,7 +237,7 @@ end
 
 
 local function debatch(batchInput)
-    if isTensor(batchInput) then
+    if torch.isTensor(batchInput) then
         return debatchTensor(batchInput)
     end
 
