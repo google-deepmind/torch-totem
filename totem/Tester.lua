@@ -296,7 +296,7 @@ function Tester:eq(got, expected, label, precision, ret)
     elseif type(expected) == "table" then
         return self:_eqTable(got, expected, label, precision)
     elseif type(expected) == "userdata" then
-        if torch.isTensor(got) then
+        if isTensor(got) then
             self:_eqSize(got, expected, label)
             diff = got:clone():add(-1, expected):abs():max()
             ok = diff <= precision
