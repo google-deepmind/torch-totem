@@ -269,7 +269,7 @@ end
 
 
 
---[[ Legacy assert on equality with a supplied precision (number, table, or user data)
+--[[ General assert on equality with a supplied precision (number, table, or user data)
 
 Parameters:
 
