@@ -543,7 +543,7 @@ all the tests are run.
     if not args.full_tensors then
         local _tostring = tostring
         tostring = function(x)
-            if torch.isTensor(x) and x:nElement() > 256 then
+            if type(x) == 'userdata' and torch.isTensor(x) and x:nElement() > 256 then
                 local sz = _tostring(x:size(1))
                 for i = 2,x:nDimension() do
                     sz = sz .. 'x' .. _tostring(x:size(i))
