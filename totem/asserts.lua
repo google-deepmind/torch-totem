@@ -1,4 +1,4 @@
---[[ Assert tensor equality
+--[[ Test for tensor equality
 
 Parameters:
 
@@ -6,11 +6,14 @@ Parameters:
 - `tb` (tensor)
 - `condition` (number) maximum pointwise difference between `a` and `b`
 
-Asserts that the maximum pointwise difference between `a` and `b` is less than
+Returns two values:
+success (boolean), failure_message (string or nil)
+
+Tests whether the maximum pointwise difference between `a` and `b` is less than
 or equal to `condition`.
 
 ]]
-function totem.assertTensorEq(ta, tb, condition, neg)
+function totem.areTensorsEq(ta, tb, condition, neg)
     -- If neg is true, we invert success and failure
     -- This allows to easily implement Tester:assertTensorNe
     local invert = false
@@ -51,11 +54,43 @@ function totem.assertTensorEq(ta, tb, condition, neg)
                                      tostring(err),
                                      tostring(condition))
 
+    local success = err <= condition
     if invert then
-        return not (err <= condition), errMessage
-    else
-        return err <= condition , errMessage
+        success = not success
     end
+    return success, (not success) and errMessage or nil
+end
+
+--[[ Assert tensor equality
+
+Parameters:
+
+- `ta` (tensor)
+- `tb` (tensor)
+- `condition` (number) maximum pointwise difference between `a` and `b`
+
+Asserts that the maximum pointwise difference between `a` and `b` is less than
+or equal to `condition`.
+
+]]
+function totem.assertTensorEq(ta, tb, condition)
+  return assert(totem.areTensorsEq(ta, tb, condition))
+end
+
+
+--[[ Test for tensor inequality
+
+Parameters:
+
+- `ta` (tensor)
+- `tb` (tensor)
+- `condition` (number)
+
+The tensors are considered unequal if the maximum pointwise difference >= condition.
+
+]]
+function totem.areTensorsNe(ta, tb, condition)
+  return totem.areTensorsEq(ta, tb, condition, true)
 end
 
 --[[ Assert tensor inequality
@@ -70,7 +105,7 @@ The tensors are considered unequal if the maximum pointwise difference >= condit
 
 ]]
 function totem.assertTensorNe(ta, tb, condition)
-  return totem.assertTensorEq(ta, tb, condition, true)
+  assert(totem.areTensorsNe(ta, tb, condition))
 end
 
 

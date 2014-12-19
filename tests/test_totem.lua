@@ -123,4 +123,42 @@ function tests.test_assertErrorPattern()
   meta_assert_failure(subtester:assertErrorPattern(bad_fn, "hehe", MESSAGE))
 end
 
+function tests.test_totemTensorEqChecks()
+  local t1 = torch.randn(100,100)
+  local t2 = t1:clone()
+  local t3 = torch.randn(100,100)
+
+  local success, msg = totem.areTensorsEq(t1, t2, 1e-5)
+  tester:assert(success, "areTensorsEq should return true")
+  tester:asserteq(msg, nil, "areTensorsEq erroneously gives msg on success")
+
+  local success, msg = totem.areTensorsEq(t1, t3, 1e-5)
+  tester:assert(not success, "areTensorsEq should return false")
+  tester:asserteq(type(msg), 'string', "areTensorsEq should return a message")
+
+  tester:assertNoError(function() totem.assertTensorEq(t1, t2, 1e-5) end,
+                       "assertTensorEq not raising an error")
+  tester:assertError(function() totem.assertTensorEq(t1, t3, 1e-5) end,
+                     "assertTensorEq not raising an error")
+end
+
+function tests.test_totemTensorNeChecks()
+  local t1 = torch.randn(100,100)
+  local t2 = t1:clone()
+  local t3 = torch.randn(100,100)
+
+  local success, msg = totem.areTensorsNe(t1, t3, 1e-5)
+  tester:assert(success, "areTensorsNe should return true")
+  tester:asserteq(msg, nil, "areTensorsNe erroneously gives msg on success")
+
+  local success, msg = totem.areTensorsNe(t1, t2, 1e-5)
+  tester:assert(not success, "areTensorsNe should return false")
+  tester:asserteq(type(msg), 'string', "areTensorsNe should return a message")
+
+  tester:assertNoError(function() totem.assertTensorNe(t1, t3, 1e-5) end,
+                       "assertTensorNe not raising an error")
+  tester:assertError(function() totem.assertTensorNe(t1, t2, 1e-5) end,
+                     "assertTensorNe not raising an error")
+end
+
 tester:add(tests):run()
