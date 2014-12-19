@@ -14,51 +14,51 @@ or equal to `condition`.
 
 ]]
 function totem.areTensorsEq(ta, tb, condition, neg)
-    -- If neg is true, we invert success and failure
-    -- This allows to easily implement Tester:assertTensorNe
-    local invert = false
-    if neg == nil then
-      invert = false
+  -- If neg is true, we invert success and failure
+  -- This allows to easily implement Tester:assertTensorNe
+  local invert = false
+  if neg == nil then
+    invert = false
+  else
+    invert = true
+  end
+
+  if ta:dim() ~= tb:dim() then
+    return false, 'The tensors have different dimensions'
+  end
+  local sizea = torch.DoubleTensor(ta:size():totable())
+  local sizeb = torch.DoubleTensor(tb:size():totable())
+  local sizediff = sizea:clone():add(-1, sizeb)
+  local sizeerr = sizediff:abs():max()
+  if sizeerr ~= 0 then
+    return false, 'The tensors have different sizes'
+  end
+
+  local function ensureHasAbs(t)
+  -- Byte, Char and Short Tensors don't have abs
+    if not t.abs then
+      return t:double()
     else
-      invert = true
+      return t
     end
+  end
 
-    if ta:dim() ~= tb:dim() then
-        return false, 'The tensors have different dimensions'
-    end
-    local sizea = torch.DoubleTensor(ta:size():totable())
-    local sizeb = torch.DoubleTensor(tb:size():totable())
-    local sizediff = sizea:clone():add(-1, sizeb)
-    local sizeerr = sizediff:abs():max()
-    if sizeerr ~= 0 then
-        return false, 'The tensors have different sizes'
-    end
+  ta = ensureHasAbs(ta)
+  tb = ensureHasAbs(tb)
 
-    local function ensureHasAbs(t)
-      -- Byte, Char and Short Tensors don't have abs
-        if not t.abs then
-            return t:double()
-        else
-            return t
-        end
-    end
+  local diff = ta:clone():add(-1, tb)
+  local err = diff:abs():max()
+  local violation = invert and 'TensorNE(==)' or ' TensorEQ(==)'
+  local errMessage = string.format('%s violation: val=%s, condition=%s',
+                                   violation,
+                                   tostring(err),
+                                   tostring(condition))
 
-    ta = ensureHasAbs(ta)
-    tb = ensureHasAbs(tb)
-
-    local diff = ta:clone():add(-1, tb)
-    local err = diff:abs():max()
-    local violation = invert and 'TensorNE(==)' or ' TensorEQ(==)'
-    local errMessage = string.format('%s violation: val=%s, condition=%s',
-                                     violation,
-                                     tostring(err),
-                                     tostring(condition))
-
-    local success = err <= condition
-    if invert then
-        success = not success
-    end
-    return success, (not success) and errMessage or nil
+  local success = err <= condition
+  if invert then
+    success = not success
+  end
+  return success, (not success) and errMessage or nil
 end
 
 --[[ Assert tensor equality
