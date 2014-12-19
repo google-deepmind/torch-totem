@@ -13,14 +13,10 @@ Tests whether the maximum pointwise difference between `a` and `b` is less than
 or equal to `condition`.
 
 ]]
-function totem.areTensorsEq(ta, tb, condition, neg)
-  -- If neg is true, we invert success and failure
-  -- This allows to easily implement Tester:assertTensorNe
-  local invert = false
-  if neg == nil then
-    invert = false
-  else
-    invert = true
+function totem.areTensorsEq(ta, tb, condition, _negate)
+  -- If _negate is true, we invert success and failure
+  if _negate == nil then
+    _negate = false
   end
 
   if ta:dim() ~= tb:dim() then
@@ -48,14 +44,14 @@ function totem.areTensorsEq(ta, tb, condition, neg)
 
   local diff = ta:clone():add(-1, tb)
   local err = diff:abs():max()
-  local violation = invert and 'TensorNE(==)' or ' TensorEQ(==)'
+  local violation = _negate and 'TensorNE(==)' or ' TensorEQ(==)'
   local errMessage = string.format('%s violation: val=%s, condition=%s',
                                    violation,
                                    tostring(err),
                                    tostring(condition))
 
   local success = err <= condition
-  if invert then
+  if _negate then
     success = not success
   end
   return success, (not success) and errMessage or nil
@@ -85,6 +81,9 @@ Parameters:
 - `ta` (tensor)
 - `tb` (tensor)
 - `condition` (number)
+
+Returns two values:
+success (boolean), failure_message (string or nil)
 
 The tensors are considered unequal if the maximum pointwise difference >= condition.
 
