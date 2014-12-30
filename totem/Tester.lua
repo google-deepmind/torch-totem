@@ -313,7 +313,7 @@ function Tester:eq(got, expected, label, precision, ret)
     if not ret then
         self:_assert_sub(ok,
             function ()
-                return string.format("%s violation at precision %f (max diff=%f): %s != %s",
+                return string.format("%s violation at precision %g (max diff=%g): %s != %s",
                         tostring(label), precision, diff, tostring(got), tostring(expected))
             end)
     end
@@ -548,7 +548,7 @@ all the tests are run.
                 for i = 2,x:nDimension() do
                     sz = sz .. 'x' .. _tostring(x:size(i))
                 end
-                return string.format('Tensor of size %s, min=%f, max=%f', sz, x:min(), x:max())
+                return string.format('Tensor of size %s, min=%g, max=%g', sz, x:min(), x:max())
             else
                 return _tostring(x)
             end
