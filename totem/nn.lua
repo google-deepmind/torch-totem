@@ -128,14 +128,15 @@ end
 
 
 
-local function checkGrad(tester, feval, params, paramName)
+local function checkGrad(tester, feval, params, paramName, precision)
     paramName = paramName or "params"
     -- feval() should return the (loss, gradParams) pair
     local _, gradParams = feval(params)
     local numGradParams = computeNumGradParams(feval, params)
     local msg = 'wrong grad w.r.t. ' .. paramName
-    local precision = (params:type() == 'torch.DoubleTensor') and 1e-4 or 1e-2
-    tester:assertTensorEq(gradParams, numGradParams, precision, msg)
+    precision = precision or (
+        (params:type() == 'torch.DoubleTensor') and 1e-4 or 1e-2)
+    tester:eq(gradParams, numGradParams, msg, precision)
 end
 
 -- Checks that the obtained gradInput has the same sizes as the input.
@@ -191,7 +192,7 @@ Parameters:
 
 The module can output either a tensor or a table of tensors.
 ]]
-function totem.nn.checkGradients(tester, module, input)
+function totem.nn.checkGradients(tester, module, input, precision)
     module = nn.Sequential()
         :add(totem._nn_CopyModule(tester))
         :add(module)
@@ -220,7 +221,7 @@ function totem.nn.checkGradients(tester, module, input)
             return loss, gradParams
         end
 
-        checkGrad(tester, feval, params, paramName)
+        checkGrad(tester, feval, params, paramName, precision)
     end
 end
 
