@@ -141,7 +141,7 @@ or equal to `condition`.
 
 ]]
 function Tester:assertTensorEq(ta, tb, condition, message)
-    local success, subMessage = totem.assertTensorEq(ta, tb, condition)
+    local success, subMessage = totem.areTensorsEq(ta, tb, condition)
     return self:_assert_sub(success, string.format("%s\n%s", message, subMessage))
 end
 
@@ -158,7 +158,7 @@ The tensors are considered unequal if the maximum pointwise difference >= condit
 
 ]]
 function Tester:assertTensorNe(ta, tb, condition, message)
-    local success, subMessage = totem.assertTensorNe(ta, tb, condition)
+    local success, subMessage = totem.areTensorsNe(ta, tb, condition)
     return self:_assert_sub(success, string.format("%s\n%s", message, subMessage))
 end
 

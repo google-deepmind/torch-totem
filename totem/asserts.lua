@@ -1,3 +1,62 @@
+--[[ Test for tensor equality
+
+Parameters:
+
+- `ta` (tensor)
+- `tb` (tensor)
+- `condition` (number) maximum pointwise difference between `a` and `b`
+
+Returns two values:
+success (boolean), failure_message (string or nil)
+
+Tests whether the maximum pointwise difference between `a` and `b` is less than
+or equal to `condition`.
+
+]]
+function totem.areTensorsEq(ta, tb, condition, _negate)
+  -- If _negate is true, we invert success and failure
+  if _negate == nil then
+    _negate = false
+  end
+
+  if ta:dim() ~= tb:dim() then
+    return false, 'The tensors have different dimensions'
+  end
+  local sizea = torch.DoubleTensor(ta:size():totable())
+  local sizeb = torch.DoubleTensor(tb:size():totable())
+  local sizediff = sizea:clone():add(-1, sizeb)
+  local sizeerr = sizediff:abs():max()
+  if sizeerr ~= 0 then
+    return false, 'The tensors have different sizes'
+  end
+
+  local function ensureHasAbs(t)
+  -- Byte, Char and Short Tensors don't have abs
+    if not t.abs then
+      return t:double()
+    else
+      return t
+    end
+  end
+
+  ta = ensureHasAbs(ta)
+  tb = ensureHasAbs(tb)
+
+  local diff = ta:clone():add(-1, tb)
+  local err = diff:abs():max()
+  local violation = _negate and 'TensorNE(==)' or ' TensorEQ(==)'
+  local errMessage = string.format('%s violation: val=%s, condition=%s',
+                                   violation,
+                                   tostring(err),
+                                   tostring(condition))
+
+  local success = err <= condition
+  if _negate then
+    success = not success
+  end
+  return success, (not success) and errMessage or nil
+end
+
 --[[ Assert tensor equality
 
 Parameters:
@@ -10,52 +69,27 @@ Asserts that the maximum pointwise difference between `a` and `b` is less than
 or equal to `condition`.
 
 ]]
-function totem.assertTensorEq(ta, tb, condition, neg)
-    -- If neg is true, we invert success and failure
-    -- This allows to easily implement Tester:assertTensorNe
-    local invert = false
-    if neg == nil then
-      invert = false
-    else
-      invert = true
-    end
+function totem.assertTensorEq(ta, tb, condition)
+  return assert(totem.areTensorsEq(ta, tb, condition))
+end
 
-    if ta:dim() ~= tb:dim() then
-        return false, 'The tensors have different dimensions'
-    end
-    local sizea = torch.DoubleTensor(ta:size():totable())
-    local sizeb = torch.DoubleTensor(tb:size():totable())
-    local sizediff = sizea:clone():add(-1, sizeb)
-    local sizeerr = sizediff:abs():max()
-    if sizeerr ~= 0 then
-        return false, 'The tensors have different sizes'
-    end
 
-    local function ensureHasAbs(t)
-      -- Byte, Char and Short Tensors don't have abs
-        if not t.abs then
-            return t:double()
-        else
-            return t
-        end
-    end
+--[[ Test for tensor inequality
 
-    ta = ensureHasAbs(ta)
-    tb = ensureHasAbs(tb)
+Parameters:
 
-    local diff = ta:clone():add(-1, tb)
-    local err = diff:abs():max()
-    local violation = invert and 'TensorNE(==)' or ' TensorEQ(==)'
-    local errMessage = string.format('%s violation: val=%s, condition=%s',
-                                     violation,
-                                     tostring(err),
-                                     tostring(condition))
+- `ta` (tensor)
+- `tb` (tensor)
+- `condition` (number)
 
-    if invert then
-        return not (err <= condition), errMessage
-    else
-        return err <= condition , errMessage
-    end
+Returns two values:
+success (boolean), failure_message (string or nil)
+
+The tensors are considered unequal if the maximum pointwise difference >= condition.
+
+]]
+function totem.areTensorsNe(ta, tb, condition)
+  return totem.areTensorsEq(ta, tb, condition, true)
 end
 
 --[[ Assert tensor inequality
@@ -70,7 +104,7 @@ The tensors are considered unequal if the maximum pointwise difference >= condit
 
 ]]
 function totem.assertTensorNe(ta, tb, condition)
-  return totem.assertTensorEq(ta, tb, condition, true)
+  assert(totem.areTensorsNe(ta, tb, condition))
 end
 
 
