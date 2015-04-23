@@ -18,6 +18,11 @@ function totem.areTensorsEq(ta, tb, condition, _negate)
   if _negate == nil then
     _negate = false
   end
+  assert(torch.isTensor(ta), "First argument should be a Tensor")
+  assert(torch.isTensor(tb), "Second argument should be a Tensor")
+  assert(type(condition) == 'number',
+         "Third argument should be a number describing a tolerance for"
+         .. " equality for a single element")
 
   if ta:dim() ~= tb:dim() then
     return false, 'The tensors have different dimensions'
