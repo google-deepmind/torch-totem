@@ -4,24 +4,26 @@ Parameters:
 
 - `ta` (tensor)
 - `tb` (tensor)
-- `condition` (number) maximum pointwise difference between `a` and `b`
+- `tolerance` (optional, number) maximum elementwise difference between `a`
+              and `b`. Defaults to `0`.
 
 Returns two values:
 success (boolean), failure_message (string or nil)
 
-Tests whether the maximum pointwise difference between `a` and `b` is less than
-or equal to `condition`.
+Tests whether the maximum elementwise difference between `a` and `b` is less
+than or equal to `tolerance`.
 
 ]]
-function totem.areTensorsEq(ta, tb, condition, _negate)
+function totem.areTensorsEq(ta, tb, tolerance, _negate)
   -- If _negate is true, we invert success and failure
   if _negate == nil then
     _negate = false
   end
+  tolerance = tolerance or 0
   assert(torch.isTensor(ta), "First argument should be a Tensor")
   assert(torch.isTensor(tb), "Second argument should be a Tensor")
-  assert(type(condition) == 'number',
-         "Third argument should be a number describing a tolerance for"
+  assert(type(tolerance) == 'number',
+         "Third argument should be a number describing a tolerance on"
          .. " equality for a single element")
 
   if ta:dim() ~= tb:dim() then
@@ -50,12 +52,12 @@ function totem.areTensorsEq(ta, tb, condition, _negate)
   local diff = ta:clone():add(-1, tb)
   local err = diff:abs():max()
   local violation = _negate and 'TensorNE(==)' or ' TensorEQ(==)'
-  local errMessage = string.format('%s violation: val=%s, condition=%s',
+  local errMessage = string.format('%s violation: val=%s, tolerance=%s',
                                    violation,
                                    tostring(err),
-                                   tostring(condition))
+                                   tostring(tolerance))
 
-  local success = err <= condition
+  local success = err <= tolerance
   if _negate then
     success = not success
   end
@@ -68,14 +70,15 @@ Parameters:
 
 - `ta` (tensor)
 - `tb` (tensor)
-- `condition` (number) maximum pointwise difference between `a` and `b`
+- `tolerance` (optional, number) maximum elementwise difference between `a` and
+`b`. Defaults to `0`.
 
-Asserts that the maximum pointwise difference between `a` and `b` is less than
-or equal to `condition`.
+Asserts that the maximum elementwise difference between `a` and `b` is less than
+or equal to `tolerance`.
 
 ]]
-function totem.assertTensorEq(ta, tb, condition)
-  return assert(totem.areTensorsEq(ta, tb, condition))
+function totem.assertTensorEq(ta, tb, tolerance)
+  return assert(totem.areTensorsEq(ta, tb, tolerance))
 end
 
 
@@ -85,16 +88,17 @@ Parameters:
 
 - `ta` (tensor)
 - `tb` (tensor)
-- `condition` (number)
+- `tolerance` (optional, number). Defaults to `0`.
 
 Returns two values:
 success (boolean), failure_message (string or nil)
 
-The tensors are considered unequal if the maximum pointwise difference >= condition.
+The tensors are considered unequal if the maximum elementwise difference >=
+`tolerance`.
 
 ]]
-function totem.areTensorsNe(ta, tb, condition)
-  return totem.areTensorsEq(ta, tb, condition, true)
+function totem.areTensorsNe(ta, tb, tolerance)
+  return totem.areTensorsEq(ta, tb, tolerance, true)
 end
 
 --[[ Assert tensor inequality
@@ -103,13 +107,14 @@ Parameters:
 
 - `ta` (tensor)
 - `tb` (tensor)
-- `condition` (number)
+- `tolerance` (optional, number). Defaults to `0`.
 
-The tensors are considered unequal if the maximum pointwise difference >= condition.
+The tensors are considered unequal if the maximum elementwise difference >=
+`tolerance`.
 
 ]]
-function totem.assertTensorNe(ta, tb, condition)
-  assert(totem.areTensorsNe(ta, tb, condition))
+function totem.assertTensorNe(ta, tb, tolerance)
+  assert(totem.areTensorsNe(ta, tb, tolerance))
 end
 
 

@@ -175,7 +175,7 @@ function tests.test_TensorArgumentErrorMessages()
   for _, fn in ipairs(funcs) do
     tester:assertErrorPattern(function() fn(nil, t, 0) end, "First argument")
     tester:assertErrorPattern(function() fn(t, nil, 0) end, "Second argument")
-    tester:assertErrorPattern(function() fn(t, t) end, "Third argument")
+    tester:assertErrorPattern(function() fn(t, t, "nan") end, "Third argument")
   end
 end
 
