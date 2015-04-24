@@ -106,13 +106,13 @@ function Tester:asserteq(actual, expected, message)
 end
 
 
--- Assert that `a` - `b` < `condition`
-function Tester:assertalmosteq(a, b, condition, message)
-    condition = condition or 1e-16
+-- Assert that `a` - `b` < `tolerance`
+function Tester:assertalmosteq(a, b, tolerance, message)
+    tolerance = tolerance or 1e-16
     local err = math.abs(a-b)
-    return self:_assert_sub(err < condition,
-            string.format('%s\n%s  val=%s, condition=%s', message, ' ALMOST_EQ(==) violation ',
-                tostring(err), tostring(condition)))
+    return self:_assert_sub(err < tolerance,
+            string.format('%s\n%s  val=%s, tolerance=%s', message, ' ALMOST_EQ(==) violation ',
+                tostring(err), tostring(tolerance)))
 end
 
 
@@ -133,15 +133,15 @@ Parameters:
 
 - `ta` (tensor)
 - `tb` (tensor)
-- `condition` (number) maximum pointwise difference between `a` and `b`
+- `tolerance` (number) maximum elementwise difference between `a` and `b`
 - `message` (string)
 
-Asserts that the maximum pointwise difference between `a` and `b` is less than
-or equal to `condition`.
+Asserts that the maximum elementwise difference between `a` and `b` is less than
+or equal to `tolerance`.
 
 ]]
-function Tester:assertTensorEq(ta, tb, condition, message)
-    local success, subMessage = totem.areTensorsEq(ta, tb, condition)
+function Tester:assertTensorEq(ta, tb, tolerance, message)
+    local success, subMessage = totem.areTensorsEq(ta, tb, tolerance)
     return self:_assert_sub(success, string.format("%s\n%s", message, subMessage))
 end
 
@@ -151,14 +151,14 @@ Parameters:
 
 - `ta` (tensor)
 - `tb` (tensor)
-- `condition` (number)
+- `tolerance` (number)
 - `message` (string)
 
-The tensors are considered unequal if the maximum pointwise difference >= condition.
+The tensors are considered unequal if the maximum elementwise difference >= tolerance.
 
 ]]
-function Tester:assertTensorNe(ta, tb, condition, message)
-    local success, subMessage = totem.areTensorsNe(ta, tb, condition)
+function Tester:assertTensorNe(ta, tb, tolerance, message)
+    local success, subMessage = totem.areTensorsNe(ta, tb, tolerance)
     return self:_assert_sub(success, string.format("%s\n%s", message, subMessage))
 end
 

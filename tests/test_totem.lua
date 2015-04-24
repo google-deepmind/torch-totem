@@ -20,8 +20,10 @@ local function meta_assert_failure(success, message)
 end
 
 function tests.really_test_assert()
-  assert((subtester:assert(true, MESSAGE)), "subtester:assert doesn't actually work!")
-  assert(not (subtester:assert(false, MESSAGE)), "subtester:assert doesn't actually work!")
+  assert((subtester:assert(true, MESSAGE)),
+         "subtester:assert doesn't actually work!")
+  assert(not (subtester:assert(false, MESSAGE)),
+         "subtester:assert doesn't actually work!")
 end
 
 function tests.test_assert()
@@ -123,7 +125,7 @@ function tests.test_assertErrorPattern()
   meta_assert_failure(subtester:assertErrorPattern(bad_fn, "hehe", MESSAGE))
 end
 
-function tests.test_totemTensorEqChecks()
+function tests.test_TensorEqChecks()
   local t1 = torch.randn(100,100)
   local t2 = t1:clone()
   local t3 = torch.randn(100,100)
@@ -142,7 +144,7 @@ function tests.test_totemTensorEqChecks()
                      "assertTensorEq not raising an error")
 end
 
-function tests.test_totemTensorNeChecks()
+function tests.test_TensorNeChecks()
   local t1 = torch.randn(100,100)
   local t2 = t1:clone()
   local t3 = torch.randn(100,100)
@@ -160,5 +162,22 @@ function tests.test_totemTensorNeChecks()
   tester:assertError(function() totem.assertTensorNe(t1, t2, 1e-5) end,
                      "assertTensorNe not raising an error")
 end
+
+function tests.test_TensorArgumentErrorMessages()
+  local t = torch.ones(1)
+  local funcs = {
+      totem.areTensorsEq,
+      totem.areTensorsNe,
+      totem.assertTensorEq,
+      totem.assertTensorNe,
+  }
+
+  for _, fn in ipairs(funcs) do
+    tester:assertErrorPattern(function() fn(nil, t, 0) end, "First argument")
+    tester:assertErrorPattern(function() fn(t, nil, 0) end, "Second argument")
+    tester:assertErrorPattern(function() fn(t, t, "nan") end, "Third argument")
+  end
+end
+
 
 tester:add(tests):run()
