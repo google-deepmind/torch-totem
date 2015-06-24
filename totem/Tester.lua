@@ -1,9 +1,17 @@
+-- Defines a totem.Tester class. This is the main object of the totem tester.
+
 local lapp = require 'pl.lapp'
 
 local c = {} -- dummy colour list
 
 local NCOLS = 80
+--[[ totem Tester class.
 
+This class defines all the basic testing utilities provided by the totem
+package.
+
+Arguments: No arguments
+]]
 local Tester = torch.class('totem.Tester')
 
 function Tester:__init()
@@ -58,7 +66,17 @@ function Tester:_assert_sub (condition, message)
 end
 
 
--- Assert that a condition is true
+--[[ Asserts that a condition holds true.
+
+Arguments:
+
+* `condition`, (boolean) the condition to be evaluated
+* `message`, (string) the error message to be displayed in case of failure
+
+Returns:
+
+1. success, boolean that indicates success
+]]
 function Tester:assert(condition, message)
     return self:_assert_sub(condition,
             string.format('%s\n%s  condition=%s', message, ' BOOL violation ',
@@ -66,7 +84,18 @@ function Tester:assert(condition, message)
 end
 
 
--- Assert that `val` < `condition`
+--[[ Asserts that the value of a variable is less than a threshold.
+
+Arguments:
+
+* `val`, (number) the variable to be evaluated
+* `condition`, (number) the threshold that `val` is compared against
+* `message`, (string) the error message to be displayed in case of failure
+
+Returns:
+
+1. success, boolean that indicates success
+]]
 function Tester:assertlt(val, condition, message)
     return self:_assert_sub(val < condition,
             string.format('%s\n%s  val=%s, condition=%s', message, ' LT(<) violation ',
@@ -74,7 +103,18 @@ function Tester:assertlt(val, condition, message)
 end
 
 
--- Assert that `val` > `condition`
+--[[ Asserts that the value of a variable is greater than a threshold.
+
+Arguments:
+
+* `val`, (number) the variable to be evaluated
+* `condition`, (number) the threshold that `val` is compared against
+* `message`, (string) the error message to be displayed in case of failure
+
+Returns:
+
+1. success, boolean that indicates success
+]]
 function Tester:assertgt(val, condition, message)
    return self:_assert_sub(val > condition,
         string.format('%s\n%s  val=%s, condition=%s',message,' GT(>) violation ',
@@ -82,7 +122,18 @@ function Tester:assertgt(val, condition, message)
 end
 
 
--- Assert that `val` <= `condition`
+--[[ Asserts that the value of a variable is less than or equal to a threshold.
+
+Arguments:
+
+* `val`, (number) the variable to be evaluated
+* `condition`, (number) the threshold that `val` is compared against
+* `message`, (string) the error message to be displayed in case of failure
+
+Returns:
+
+1. success, boolean that indicates success
+]]
 function Tester:assertle(val, condition, message)
     return self:_assert_sub(val <= condition,
             string.format('%s\n%s  val=%s, condition=%s', message, ' LE(<=) violation ',
@@ -90,7 +141,19 @@ function Tester:assertle(val, condition, message)
 end
 
 
--- Assert that `val` >= `condition`
+--[[ Asserts that the value of a variable is greater than or equal to a
+threshold.
+
+Arguments:
+
+* `val`, (number) the variable to be evaluated
+* `condition`, (number) the threshold that `val` is compared against
+* `message`, (string) the error message to be displayed in case of failure
+
+Returns:
+
+1. success, boolean that indicates success
+]]
 function Tester:assertge(val, condition, message)
     return self:_assert_sub(val >= condition,
             string.format('%s\n%s  val=%s, condition=%s', message, ' GE(>=) violation ',
@@ -98,15 +161,38 @@ function Tester:assertge(val, condition, message)
 end
 
 
--- Assert that `actual` == `expected`
+--[[ Asserts that the value of a variable is equal to an expected value.
+
+Arguments:
+
+* `val`, (number) the variable to be evaluated
+* `expected`, (number) the expected value that `val` is compared against
+* `message`, (string) the error message to be displayed in case of failure
+
+Returns:
+
+1. success, boolean that indicates success
+]]
 function Tester:asserteq(actual, expected, message)
     return self:_assert_sub(actual == expected,
             string.format('%s\n%s  actual=%s, expected=%s', message, ' EQ(==) violation ',
                 tostring(actual), tostring(expected)))
 end
 
+--[[ Asserts that two variables are almost equal.
 
--- Assert that `a` - `b` < `tolerance`
+Arguments:
+
+* `a`, (number) first variable
+* `b`, (number) second variable
+* `tolerance`, (optional number, default 1e-16) the maximum acceptable
+    difference of a and b
+* `message`, (string) the error message to be displayed in case of failure
+
+Returns:
+
+1. success, boolean that indicates success
+]]
 function Tester:assertalmosteq(a, b, tolerance, message)
     tolerance = tolerance or 1e-16
     local err = math.abs(a-b)
@@ -115,8 +201,18 @@ function Tester:assertalmosteq(a, b, tolerance, message)
                 tostring(err), tostring(tolerance)))
 end
 
+--[[ Asserts that the value of a variable is not equal to a given value.
 
--- Assert that `val` ~= `condition`
+Arguments:
+
+* `val`, (number) the variable to be evaluated
+* `condition`, (number) a value to compare `val` against
+* `message`, (string) the error message to be displayed in case of failure
+
+Returns:
+
+1. success, boolean that indicates success
+]]
 function Tester:assertne (val, condition, message)
     return self:_assert_sub(val ~= condition,
             function ()
@@ -127,35 +223,43 @@ end
 
 
 
---[[ Assert tensor equality
+--[[ Asserts that two tensors are equal.
 
-Parameters:
+The two tensors provided should be of the same type.
 
-- `ta` (tensor)
-- `tb` (tensor)
-- `tolerance` (number) maximum elementwise difference between `a` and `b`
-- `message` (string)
+Arguments:
 
-Asserts that the maximum elementwise difference between `a` and `b` is less than
-or equal to `tolerance`.
+* `ta`, (tensor) first tensor
+* `tb`, (tensor) second tensor
+* `tolerance`, (number) the maximum acceptable difference of ta and tb
+* `message`, (string) the error message to be displayed in case of failure
 
+Returns:
+
+1. success, boolean that indicates success
 ]]
 function Tester:assertTensorEq(ta, tb, tolerance, message)
     local success, subMessage = totem.areTensorsEq(ta, tb, tolerance)
     return self:_assert_sub(success, string.format("%s\n%s", message, subMessage))
 end
 
---[[ Assert tensor inequality
 
-Parameters:
 
-- `ta` (tensor)
-- `tb` (tensor)
-- `tolerance` (number)
-- `message` (string)
+--[[ Asserts that two tensors are unequal.
 
-The tensors are considered unequal if the maximum elementwise difference >= tolerance.
+The tensors are considered unequal if the maximum elementwise
+difference >= tolerance. The two tensors provided should be of the same type.
 
+Arguments:
+
+* `ta`, (tensor) first tensor
+* `tb`, (tensor) second tensor
+* `tolerance`, (number) the minimum acceptable difference of ta and tb
+* `message`, (string) the error message to be displayed in case of failure
+
+Returns:
+
+1. success, boolean that indicates success
 ]]
 function Tester:assertTensorNe(ta, tb, tolerance, message)
     local success, subMessage = totem.areTensorsNe(ta, tb, tolerance)
@@ -163,14 +267,21 @@ function Tester:assertTensorNe(ta, tb, tolerance, message)
 end
 
 
---[[ Assert that two tables are equal (comparing values, recursively)
+--[[ Asserts that two tables are equal by recursively comparing their values.
 
-Parameters:
+This function recursively traverses the two tables and asserts the equality of
+their non-table elements. Note that this method simply uses the `==` operator
+to assess the equality of two non-table elements.
 
-- `actual` (table)
-- `expected` (table)
-- `message` (string)
+Arguments:
 
+* `actual`, (table) the first table
+* `expected`, (table) the second table
+* `message`, (string) the error message to be displayed in case of failure
+
+Returns:
+
+1. success, boolean that indicates success
 ]]
 function Tester:assertTableEq(actual, expected, message)
     return self:_assert_sub(totem.assertTableEq(actual, expected),
@@ -179,14 +290,19 @@ function Tester:assertTableEq(actual, expected, message)
 end
 
 
---[[ Assert that two tables are *not* equal (comparing values, recursively)
+--[[ Asserts that two tables are not equal.
 
-Parameters:
+The values of the two tables are being compared recursively.
 
-- `ta` (table)
-- `tb` (table)
-- `message` (string)
+Arguments:
 
+* `ta`, (table) the first table
+* `expected`, (table) the second table
+* `message`, (string) the error message to be displayed in case of failure
+
+Returns:
+
+1. success, boolean that indicates success
 ]]
 function Tester:assertTableNe(ta, tb, message)
     return self:_assert_sub(totem.assertTableNe(ta, tb),
@@ -195,69 +311,85 @@ function Tester:assertTableNe(ta, tb, message)
 end
 
 
---[[ Assert that an error is raised by `f`
+--[[ Asserts that an error is raised by `f`
 
-Parameters:
+Arguments:
 
-- `f` (function) function to be tested
-- `message` (string) message to print on assertion failure
+* `f`, (function) function to be tested
+* `message`, (string) the error message to be displayed in case of failure
 
+Returns:
+
+1. success, boolean that indicates success
 ]]
 function Tester:assertError(f, message)
     return self:assertErrorObj(f, function(err) return true end, message)
 end
 
 
---[[ Assert that an error is not raised by `f`
+--[[ Asserts that no error is raised by `f`
 
-Parameters:
+Arguments:
 
-- `f` (function) function to be tested
-- `message` (string) message to print on assertion failure
+* `f`, (function) function to be tested
+* `message`, (string) the error message to be displayed in case of failure
 
+Returns:
+
+1. success, boolean that indicates success
 ]]
 function Tester:assertNoError(f, message)
     return self:assertErrorObj(f, function(err) return true end, message, true)
 end
 
 
---[[ Assert that an error is raised by `f` with a specific message
+--[[ Asserts that an error is raised by `f` with a specific message
 
-Parameters:
+Arguments:
 
-- `f` (function) function to be tested
-- `errmsg` (string) error message that should be generated by `f`
-- `message` (string) message to print on assertion failure
+* `f`, (function) function to be tested
+* `errmsg`, (string) error message that should be generated by `f`
+* `message`, (string) the error message to be displayed in case of failure
 
+Returns:
+
+1. success, boolean that indicates success
 ]]
 function Tester:assertErrorMsg(f, errmsg, message)
     return self:assertErrorObj(f, function(err) return err == errmsg end, message)
 end
 
 
---[[ Assert that an error is raised by `f` containing a specific pattern
+--[[ Asserts that an error is raised by `f` containing a specific pattern.
 
-Parameters:
+Arguments:
 
-- `f` (function) function to be tested
-- `errPattern` (string) pattern that should be present in the error object
-- `message` (string) message to print on assertion failure
+* `f`, (function) function to be tested
+* `errPattern`, (string) pattern that should be present in the error object
+* `message`, (string) the error message to be displayed in case of failure
 
+Returns:
+
+1. success, boolean that indicates success
 ]]
 function Tester:assertErrorPattern(f, errPattern, message)
     return self:assertErrorObj(f, function(err) return string.find(err, errPattern) ~= nil end, message)
 end
 
 
---[[ Assert that an error is raised by `f` which satisfies some condition
+--[[ Asserts that an error is raised by `f` which satisfies some condition.
 
-Parameters:
+Arguments:
 
-- `f` (function) function to be tested
-- `errcomp` (function : obj → bool) function that compares the error object to its expected value
-- `message` (string) message to print on assertion failure
-- `condition` (boolean) assert condition on status of pcall (defaults to false)
+* `f`, (function) function to be tested
+* `errcomp`, (function : obj → bool) function that compares the error object
+    to its expected value
+* `message`, (string) the error message to be displayed in case of failure
+* `condition`, (boolean) assert condition on status of pcall (defaults to false)
 
+Returns:
+
+1. success, boolean that indicates success
 ]]
 function Tester:assertErrorObj(f, errcomp, message, condition)
     local status, err = pcall(f)
@@ -267,16 +399,25 @@ end
 
 
 
---[[ General assert on equality with a supplied precision (number, table, or user data)
+--[[ General assert on equality with a supplied precision (number, table,
+user data).
 
-Parameters:
+In case of tables the comparison is carried out recursively with precision
+being passed down to sub-objects.
 
-- `got` (number, table, userData) the value computed during the test execution
-- `expected` (number, table, userData) the expected value
-- `label` (string) used for output labelling
-- `precision` (number) the maximum allowed precision required to pass
-- `ret` (boolean) whether to return a value instead of running an assertion (default is false)
+Arguments:
 
+* `got`, (number, table, userData, string) the value computed during the test
+    execution
+* `expected`, (number, table, userData) the expected value
+* `label`, (string) used for output labelling
+* `precision`, (number) the maximum allowed difference for numbers or tensors.
+* `ret`, (boolean) whether to return a value instead of running an assertion
+    (default is false)
+
+Returns:
+
+1. success, boolean that indicates success
 ]]
 function Tester:eq(got, expected, label, precision, ret)
 
@@ -569,13 +710,12 @@ all the tests are run.
 end
 
 
---[[ Run tests
+--[[ Runs tests.
 
-Parameters:
+Arguments:
 
-- `tests` (optional string or table of strings) names of tests to run (if not
-   running from the command-line).
-
+* `tests` (optional string or table of strings) names of tests to run (if not
+     running from the command-line).
 ]]
 function Tester:run(tests)
     local status = 0
@@ -701,24 +841,24 @@ function Tester:_run(tests, summary, earlyAbort, rethrow)
 end
 
 
---[[ Add one or more test cases to tester
+--[[ Adds one or more test cases to a totem.Tester instance.
 
-Parameters:
+Arguments:
 
-- `test` (function, table, number, string)
-    A function is a test case that makes assertions.
-    A table should contain a number of functions. These are added individually.
-    A number is assumed to be a return code from a tester run, for use in
-    nested tests. 0 means no errors, while any other value indicate error.
-    A string is assumed to be a filename which when loaded returns a test
-    return code as described above.
-- `name` (optional string) name of test. If the test is a filename, the `name`
+* `test`, (function, table, number, string)
+    * A function is a test case that makes assertions.
+    * A table should contain a number of functions. These are added
+        individually.
+    * A number is assumed to be a return code from a tester run, for use in
+        nested tests. 0 means no errors, while any other value indicate error.
+    * A string is assumed to be a filename which when loaded returns a test
+        return code as described above.
+* `name` (optional string) name of test. If the test is a filename, the `name`
     parameter is ignored.
 
-Return:
+Returns:
 
-- `self`
-
+- `self`, the totem.Tester instance
 ]]
 function Tester:add(f, name)
     name = name or 'unknown'
@@ -739,3 +879,7 @@ function Tester:add(f, name)
     end
     return self
 end
+
+local paths = require 'paths'
+local file = require 'learning.lua.file'
+local logging = require 'learning.lua.logging'

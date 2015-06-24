@@ -1,3 +1,4 @@
+-- Helper functions for testing nn networks.
 
 totem.nn = {}
 
@@ -41,8 +42,9 @@ end
 
 
 
--- Produce random gradOutput for the given output.
--- The output can be a table of tensors.
+--[[ Produce random gradOutput for the given output.
+The output can be a table of tensors.
+]]
 local function produceRandomGradOutput(output)
     if torch.isTensor(output) then
         return torch.randn(output:size()):typeAs(output)
@@ -151,10 +153,19 @@ local function checkSizes(tester, input, gradInput)
     end
 end
 
--- The CopyModule is used in totem.nn.checkGradients to get
--- non-shared inputs and non-reassigned module.gradInput.
+
 local nesting = require 'nngraph.nesting'
 require 'nn'
+
+--[[ A copy `nn.Module`.
+
+The CopyModule is used in `totem.nn.checkGradients` to get non-shared inputs and
+non-reassigned module.gradInput.
+
+Arguments:
+
+* `tester`, an instance of totem.Tester
+]]
 local CopyModule, CopyModuleParent = torch.class('totem._nn_CopyModule', 'nn.Module')
 
 function CopyModule:__init(tester)
@@ -183,14 +194,20 @@ end
 
 
 
---[[ Checks all computed gradients, i.e., the gradient w.r.t. input and the gradient w.r.t. parameters.
-
-Parameters:
-
-- `module` (nn.Module instance)
-- `input` input to `module`, either a tensor or a table of tensors
+--[[ Checks all computed gradients, i.e., the gradient w.r.t. input and the
+gradient w.r.t. parameters.
 
 The module can output either a tensor or a table of tensors.
+
+Arguments:
+
+* `tester`, an instance of `totem.Tester`
+* `module`, an `nn.Module` instance
+* `input`, the input to `module`, either a tensor or a table of tensors
+* `precision`, (number) the maximum allowed difference between the `module`
+    computed gradients and the numerically computed ones. If the absolute value
+    of the max difference between the two gradients is greater than the value of
+    `precision` this test fails.
 ]]
 function totem.nn.checkGradients(tester, module, input, precision)
     module = nn.Sequential()
@@ -261,14 +278,17 @@ end
 
 
 
---[[ Check that minibatch and non-minibatch outputs are the same
+--[[ Checks that minibatch and non-minibatch outputs are the same.
 
--Parameters:
+Arguments:
 
-- `tester` (totem.Tester instance)
-- `module` (nn.Module instance)
-- `batchInput` (tensor) a batch of inputs to `module`
-
+* `tester`, a `totem.Tester` instance
+* `module`, an `nn.Module` instance
+* `batchInput`, a batch of tensor inputs to `module`
+* `precision`, (number) the maximum allowed difference between the minibatch and
+    the non-minibatch computed outputs. If the absolute value
+    of the max difference between the two outputs is greater than the value of
+    `precision` this test fails.
 ]]
 function totem.nn.checkMinibatch(tester, module, batchInput, precision)
     precision = precision or 1e-14
@@ -290,23 +310,25 @@ end
 
 
 
---[[ Check that a module can be cast to another type
+--[[ Checks that a module can be cast to another type.
 
-Parameters:
+This test fails if the cast operation itself fails (i.e. `module.type()`), or
+if the result of a forward update of the module differs significantly before and
+after having been cast to `toType` and back again to the original type, or if
+the result of a forward update of the module after being cast to `toType`
+differs significantly from before the cast, or if after casting to `toType`,
+the module still contains tensors of the original type.
 
-- `tester` (totem.Tester instance)
-- `module` (nn.Module instance)
-- `input` (tensor or table of tensors) inputs to `module`
-- `toType` (optional string, default 'torch.FloatTensor') type to which module should be cast
+Arguments:
 
-This test fails if the cast operation itself fails (i.e.
-`module.type()`), or  if the result of a forward update of the module differs
-significantly before and after having been cast to `toType` and back again to
-the original type, or if the result of a forward update of the module after being
-cast to `toType` differs significantly from before the cast, or if after casting
-to `toType`, the module still contains tensors of the original type.
-
---]]
+* `tester`, a `totem.Tester` instance
+* `module`, an `nn.Module` instance
+* `input`, a tensor or a table of tensors input to `module`
+* `toType`, an optional string with default value `'torch.FloatTensor'`.
+    It is the type to which the module should be cast.
+* `precision`, (number) the maximum allowed difference between the outputs and
+    gradients computed before and after type-casting the `module`.
+]]
 function totem.nn.checkTypeCastable(tester, module, input, toType, precision)
     precision = precision or 1e-6
     local origType = inputType(input)
@@ -401,20 +423,20 @@ end
 
 
 
---[[ Check that a module can be serialized and deserialized to disk
-
-Parameters:
-
-- `tester` (totem.Tester instance)
-- `module` (nn.Module instance)
-- `input` (tensor) inputs to `module`
-- `gradOutput` (tensor) gradOutput to `module`
+--[[ Checks that a module can be serialized to disk and deserialized.
 
 This test fails if either the serialization operation itself fails (using
 `torch.save`) or if the result of a forward update of the module differs
 significantly before and after a roundtrip to disk.
 
---]]
+Arguments:
+
+* `tester`, a `totem.Tester` instance
+* `module`, a `nn.Module` instance
+* `input`, tensor input to `module`
+* `precision`, (number) the maximum allowed difference between the outputs and
+    gradients computed before and after serializing and restoring the `module`.
+]]
 function totem.nn.checkSerializable(tester, module, input, precision)
     precision = precision or 1e-6
     local rngState = torch.getRNGState()

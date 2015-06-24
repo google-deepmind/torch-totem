@@ -1,18 +1,21 @@
+-- Functions for checking Tensor and Table equality.
+
 --[[ Test for tensor equality
 
-Parameters:
-
-- `ta` (tensor)
-- `tb` (tensor)
-- `tolerance` (optional, number) maximum elementwise difference between `a`
-              and `b`. Defaults to `0`.
-
-Returns two values:
-success (boolean), failure_message (string or nil)
-
-Tests whether the maximum elementwise difference between `a` and `b` is less
+Tests whether the maximum element-wise difference between `a` and `b` is less
 than or equal to `tolerance`.
 
+Arguments:
+
+* `ta` (tensor)
+* `tb` (tensor)
+* `tolerance` (optional, number) maximum elementwise difference between `a`
+     and `b`. Defaults to `0`.
+
+Returns:
+
+1. success, boolean that indicates success
+2. failure_message, string or nil
 ]]
 function totem.areTensorsEq(ta, tb, tolerance, _negate)
   -- If _negate is true, we invert success and failure
@@ -64,18 +67,17 @@ function totem.areTensorsEq(ta, tb, tolerance, _negate)
   return success, (not success) and errMessage or nil
 end
 
---[[ Assert tensor equality
-
-Parameters:
-
-- `ta` (tensor)
-- `tb` (tensor)
-- `tolerance` (optional, number) maximum elementwise difference between `a` and
-`b`. Defaults to `0`.
+--[[ Asserts tensor equality.
 
 Asserts that the maximum elementwise difference between `a` and `b` is less than
 or equal to `tolerance`.
 
+Arguments:
+
+* `ta` (tensor)
+* `tb` (tensor)
+* `tolerance` (optional, number) maximum elementwise difference between `a` and
+    `b`. Defaults to `0`.
 ]]
 function totem.assertTensorEq(ta, tb, tolerance)
   return assert(totem.areTensorsEq(ta, tb, tolerance))
@@ -84,34 +86,34 @@ end
 
 --[[ Test for tensor inequality
 
-Parameters:
-
-- `ta` (tensor)
-- `tb` (tensor)
-- `tolerance` (optional, number). Defaults to `0`.
-
-Returns two values:
-success (boolean), failure_message (string or nil)
-
 The tensors are considered unequal if the maximum elementwise difference >=
 `tolerance`.
+
+Arguments:
+
+* `ta` (tensor)
+* `tb` (tensor)
+* `tolerance` (optional, number). Defaults to `0`.
+
+Returns:
+1. success, a boolean indicating success
+2. failure_message, string or nil
 
 ]]
 function totem.areTensorsNe(ta, tb, tolerance)
   return totem.areTensorsEq(ta, tb, tolerance, true)
 end
 
---[[ Assert tensor inequality
-
-Parameters:
-
-- `ta` (tensor)
-- `tb` (tensor)
-- `tolerance` (optional, number). Defaults to `0`.
+--[[ Asserts tensor inequality.
 
 The tensors are considered unequal if the maximum elementwise difference >=
 `tolerance`.
 
+Arguments:
+
+* `ta` (tensor)
+* `tb` (tensor)
+* `tolerance` (optional, number). Defaults to `0`.
 ]]
 function totem.assertTensorNe(ta, tb, tolerance)
   assert(totem.areTensorsNe(ta, tb, tolerance))
@@ -128,24 +130,24 @@ local function isIncludedIn(ta, tb)
     return true
 end
 
---[[ Assert that two tables are equal (comparing values, recursively)
+--[[ Asserts that two tables are equal (comparing values, recursively).
 
-Parameters:
+Arguments:
 
-- `actual` (table)
-- `expected` (table)
+* `actual` (table)
+* `expected` (table)
 
 ]]
 function totem.assertTableEq(ta, tb)
     return isIncludedIn(ta, tb) and isIncludedIn(tb, ta)
 end
 
---[[ Assert that two tables are *not* equal (comparing values, recursively)
+--[[ Asserts that two tables are *not* equal (comparing values, recursively).
 
-Parameters:
+Arguments:
 
-- `actual` (table)
-- `expected` (table)
+* `actual` (table)
+* `expected` (table)
 
 ]]
 function totem.assertTableNe(ta, tb)
