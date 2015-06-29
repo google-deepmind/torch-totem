@@ -10,7 +10,7 @@ local NCOLS = 80
 This class defines all the basic testing utilities provided by the totem
 package.
 
-Arguments: No arguments
+Arguments: No arguments.
 ]]
 local Tester = torch.class('totem.Tester')
 
@@ -51,7 +51,7 @@ end
 
 --[[
 
-Parameters:
+Arguments:
 
 - `condition` (boolean)
 - `message` (string or function : nil → string)
@@ -70,12 +70,10 @@ end
 
 Arguments:
 
-* `condition`, (boolean) the condition to be evaluated
-* `message`, (string) the error message to be displayed in case of failure
+* `condition` (boolean) the condition to be evaluated.
+* `message` (string) the error message to be displayed in case of failure.
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assert(condition, message)
     return self:_assert_sub(condition,
@@ -88,13 +86,11 @@ end
 
 Arguments:
 
-* `val`, (number) the variable to be evaluated
-* `condition`, (number) the threshold that `val` is compared against
-* `message`, (string) the error message to be displayed in case of failure
+* `val` (number) the variable to be evaluated.
+* `condition` (number) the threshold that `val` is compared against.
+* `message` (string) the error message to be displayed in case of failure.
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertlt(val, condition, message)
     return self:_assert_sub(val < condition,
@@ -107,13 +103,11 @@ end
 
 Arguments:
 
-* `val`, (number) the variable to be evaluated
-* `condition`, (number) the threshold that `val` is compared against
-* `message`, (string) the error message to be displayed in case of failure
+* `val` (number) the variable to be evaluated.
+* `condition` (number) the threshold that `val` is compared against.
+* `message` (string) the error message to be displayed in case of failure.
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertgt(val, condition, message)
    return self:_assert_sub(val > condition,
@@ -126,13 +120,11 @@ end
 
 Arguments:
 
-* `val`, (number) the variable to be evaluated
-* `condition`, (number) the threshold that `val` is compared against
-* `message`, (string) the error message to be displayed in case of failure
+* `val` (number) the variable to be evaluated.
+* `condition` (number) the threshold that `val` is compared against.
+* `message` (string) the error message to be displayed in case of failure.
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertle(val, condition, message)
     return self:_assert_sub(val <= condition,
@@ -146,13 +138,11 @@ threshold.
 
 Arguments:
 
-* `val`, (number) the variable to be evaluated
-* `condition`, (number) the threshold that `val` is compared against
-* `message`, (string) the error message to be displayed in case of failure
+* `val` (number) the variable to be evaluated.
+* `condition` (number) the threshold that `val` is compared against.
+* `message` (string) the error message to be displayed in case of failure.
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertge(val, condition, message)
     return self:_assert_sub(val >= condition,
@@ -165,13 +155,11 @@ end
 
 Arguments:
 
-* `val`, (number) the variable to be evaluated
-* `expected`, (number) the expected value that `val` is compared against
-* `message`, (string) the error message to be displayed in case of failure
+* `val` (number) the variable to be evaluated.
+* `expected` (number) the expected value that `val` is compared against.
+* `message` (string) the error message to be displayed in case of failure.
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:asserteq(actual, expected, message)
     return self:_assert_sub(actual == expected,
@@ -183,15 +171,13 @@ end
 
 Arguments:
 
-* `a`, (number) first variable
-* `b`, (number) second variable
-* `tolerance`, (optional number, default 1e-16) the maximum acceptable
-    difference of a and b
-* `message`, (string) the error message to be displayed in case of failure
+* `a` (number) first variable.
+* `b` (number) second variable.
+* `tolerance` (optional number, default 1e-16) the maximum acceptable
+    difference of `a` and `b`.
+* `message` (string) the error message to be displayed in case of failure.
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertalmosteq(a, b, tolerance, message)
     tolerance = tolerance or 1e-16
@@ -205,13 +191,11 @@ end
 
 Arguments:
 
-* `val`, (number) the variable to be evaluated
-* `condition`, (number) a value to compare `val` against
-* `message`, (string) the error message to be displayed in case of failure
+* `val` (number) the variable to be evaluated.
+* `condition` (number) a value to compare `val` against.
+* `message` (string) the error message to be displayed in case of failure.
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertne (val, condition, message)
     return self:_assert_sub(val ~= condition,
@@ -229,14 +213,12 @@ The two tensors provided should be of the same type.
 
 Arguments:
 
-* `ta`, (tensor) first tensor
-* `tb`, (tensor) second tensor
-* `tolerance`, (number) the maximum acceptable difference of ta and tb
-* `message`, (string) the error message to be displayed in case of failure
+* `ta` (tensor) first tensor.
+* `tb` (tensor) second tensor.
+* `tolerance` (number) the maximum acceptable difference of ta and tb.
+* `message` (string) the error message to be displayed in case of failure.
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertTensorEq(ta, tb, tolerance, message)
     local success, subMessage = totem.areTensorsEq(ta, tb, tolerance)
@@ -252,14 +234,12 @@ difference >= tolerance. The two tensors provided should be of the same type.
 
 Arguments:
 
-* `ta`, (tensor) first tensor
-* `tb`, (tensor) second tensor
-* `tolerance`, (number) the minimum acceptable difference of ta and tb
-* `message`, (string) the error message to be displayed in case of failure
+* `ta` (tensor) first tensor.
+* `tb` (tensor) second tensor.
+* `tolerance` (number) the minimum acceptable difference of ta and tb.
+* `message` (string) the error message to be displayed in case of failure.
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertTensorNe(ta, tb, tolerance, message)
     local success, subMessage = totem.areTensorsNe(ta, tb, tolerance)
@@ -275,13 +255,11 @@ to assess the equality of two non-table elements.
 
 Arguments:
 
-* `actual`, (table) the first table
-* `expected`, (table) the second table
-* `message`, (string) the error message to be displayed in case of failure
+* `actual` (table) the first table.
+* `expected` (table) the second table.
+* `message` (string) the error message to be displayed in case of failure.
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertTableEq(actual, expected, message)
     return self:_assert_sub(totem.assertTableEq(actual, expected),
@@ -296,13 +274,11 @@ The values of the two tables are being compared recursively.
 
 Arguments:
 
-* `ta`, (table) the first table
-* `expected`, (table) the second table
-* `message`, (string) the error message to be displayed in case of failure
+* `ta` (table) the first table.
+* `expected` (table) the second table.
+* `message` (string) the error message to be displayed in case of failure.
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertTableNe(ta, tb, message)
     return self:_assert_sub(totem.assertTableNe(ta, tb),
@@ -315,12 +291,10 @@ end
 
 Arguments:
 
-* `f`, (function) function to be tested
-* `message`, (string) the error message to be displayed in case of failure
+* `f` (function) function to be tested.
+* `message` (string) the error message to be displayed in case of failure.
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertError(f, message)
     return self:assertErrorObj(f, function(err) return true end, message)
@@ -331,12 +305,10 @@ end
 
 Arguments:
 
-* `f`, (function) function to be tested
-* `message`, (string) the error message to be displayed in case of failure
+* `f` (function) function to be tested.
+* `message` (string) the error message to be displayed in case of failure.
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertNoError(f, message)
     return self:assertErrorObj(f, function(err) return true end, message, true)
@@ -347,13 +319,11 @@ end
 
 Arguments:
 
-* `f`, (function) function to be tested
-* `errmsg`, (string) error message that should be generated by `f`
-* `message`, (string) the error message to be displayed in case of failure
+* `f` (function) function to be tested.
+* `errmsg` (string) error message that should be generated by `f`.
+* `message` (string) the error message to be displayed in case of failure.
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertErrorMsg(f, errmsg, message)
     return self:assertErrorObj(f, function(err) return err == errmsg end, message)
@@ -364,13 +334,11 @@ end
 
 Arguments:
 
-* `f`, (function) function to be tested
-* `errPattern`, (string) pattern that should be present in the error object
-* `message`, (string) the error message to be displayed in case of failure
+* `f` (function) function to be tested.
+* `errPattern` (string) pattern that should be present in the error object.
+* `message` (string) the error message to be displayed in case of failure.
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertErrorPattern(f, errPattern, message)
     return self:assertErrorObj(f, function(err) return string.find(err, errPattern) ~= nil end, message)
@@ -381,15 +349,14 @@ end
 
 Arguments:
 
-* `f`, (function) function to be tested
+* `f`, (function) function to be tested.
 * `errcomp`, (function : obj → bool) function that compares the error object
-    to its expected value
-* `message`, (string) the error message to be displayed in case of failure
-* `condition`, (boolean) assert condition on status of pcall (defaults to false)
+    to its expected value.
+* `message`, (string) the error message to be displayed in case of failure.
+* `condition`, (boolean) assert condition on status of pcall
+    (defaults to false).
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertErrorObj(f, errcomp, message, condition)
     local status, err = pcall(f)
@@ -408,16 +375,14 @@ being passed down to sub-objects.
 Arguments:
 
 * `got`, (number, table, userData, string) the value computed during the test
-    execution
-* `expected`, (number, table, userData) the expected value
-* `label`, (string) used for output labelling
+    execution.
+* `expected`, (number, table, userData) the expected value.
+* `label`, (string) used for output labelling.
 * `precision`, (number) the maximum allowed difference for numbers or tensors.
 * `ret`, (boolean) whether to return a value instead of running an assertion
-    (default is false)
+    (default is false).
 
-Returns:
-
-1. success, boolean that indicates success
+Returns (boolean) whether the test succeeded.
 ]]
 function Tester:eq(got, expected, label, precision, ret)
 
@@ -856,9 +821,7 @@ Arguments:
 * `name` (optional string) name of test. If the test is a filename, the `name`
     parameter is ignored.
 
-Returns:
-
-- `self`, the totem.Tester instance
+Returns the totem.Tester instance.
 ]]
 function Tester:add(f, name)
     name = name or 'unknown'
