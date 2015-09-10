@@ -727,8 +727,14 @@ function Tester:add(f, name)
             self:add(v,i)
         end
     elseif type(f) == "function" then
+        if self.tests[name] ~= nil then
+            error('Test with name ' .. name .. ' already exists!')
+        end
         self.tests[name] = f
     elseif type(f) == "number" then
+        if self.tests[name] ~= nil then
+            error('Test with name ' .. name .. ' already exists!')
+        end
         -- a test that has already been run
         self.tests[name] = function() self:_assert_sub(f == 0) end
     elseif type(f) == "string" then
