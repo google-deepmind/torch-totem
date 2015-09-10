@@ -722,7 +722,11 @@ Return:
 ]]
 function Tester:add(f, name)
     name = name or 'unknown'
-    if type(f) == "table" then
+    if type(f) == "table" and f.__isTotemTestSuite then
+        for i,v in pairs(f.__tests) do
+            self:add(v,i)
+        end
+    elseif type(f) == "table" then
         for i,v in pairs(f) do
             self:add(v,i)
         end
@@ -745,3 +749,5 @@ function Tester:add(f, name)
     end
     return self
 end
+
+
