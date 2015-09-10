@@ -16,5 +16,6 @@ setmetatable(totem, mt)
 
 torch.include('totem', 'asserts.lua')
 torch.include('totem', 'Tester.lua')
+torch.include('totem', 'TestSuite.lua')
 
 return totem

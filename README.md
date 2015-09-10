@@ -14,25 +14,25 @@ A test script can be written as follows:
 
 	require 'totem'
 
-	local mytest = {}
+	local tests = totem.TestSuite()
 	 
 	local tester = totem.Tester()
 	 
-	function mytest.TestA()
+	function tests.TestA()
 		local a = 10
 		local b = 10
 		tester:asserteq(a, b, 'a == b')
 		tester:assertne(a,b,'a ~= b')
 	end
 	 
-	function mytest.TestB()
+	function tests.TestB()
 		local a = 10
 		local b = 9
 		tester:assertlt(a, b, 'a < b')
 		tester:assertgt(a, b, 'a > b')
 	end
 	 
-	return tester:add(mytest):run()
+	return tester:add(tests):run()
 
 The command `totem-init` can be used to generate an empty test.
 
@@ -77,7 +77,6 @@ such files. For example
 
         require 'totem'
 
-        local test = {}
         local tester = totem.Tester()
         tester:add('test_nn.lua')
         tester:add('test_simple.lua')
