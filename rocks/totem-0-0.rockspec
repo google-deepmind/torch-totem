@@ -19,6 +19,7 @@ build = {
 	modules = {
 		['totem.init'] = 'totem/init.lua',
 		['totem.nn'] = 'totem/nn.lua',
+		['totem.TestSuite'] = 'totem/TestSuite.lua',
 		['totem.Tester'] = 'totem/Tester.lua',
 		['totem.TestSuite'] = 'totem/TestSuite.lua',
 		['totem.asserts'] = 'totem/asserts.lua',

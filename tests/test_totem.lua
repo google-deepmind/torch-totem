@@ -187,7 +187,8 @@ function tests.testSuite_duplicateTests()
         function tests.testThis()
         end
     end
-    tester:assertErrorPattern(createDuplicateTests, "Test testThis is already defined.")
+    tester:assertErrorPattern(createDuplicateTests,
+                              "Test testThis is already defined.")
 end
 
 tester:add(tests):run()
