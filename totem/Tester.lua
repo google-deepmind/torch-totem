@@ -365,8 +365,8 @@ function Tester:_eqTable(got, expected, label, precision)
         if type(value2) == 'table' then
             value2 = 'table2'
         end
-        self:_failure(string.format("%s inconsistent values: %s != %s at position %d",
-                      label, tostring(value1), tostring(value2), position))
+        self:_failure(string.format("%s inconsistent values: %s != %s at position %s",
+                      label, tostring(value1), tostring(value2), tostring(position)))
     end
 
     if #got ~= #expected then
