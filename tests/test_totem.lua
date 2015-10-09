@@ -191,4 +191,28 @@ function tests.testSuite_duplicateTests()
                               "Test testThis is already defined.")
 end
 
+function tests.test_checkGradientsAcceptsGenericOutput()
+    require 'nn'
+    local Mod = torch.class('totem.dummyClass', 'nn.Module')
+    function Mod:updateOutput(input)
+        self.output = {
+            [1] = {
+                [1] = torch.randn(3, 5),
+                [2] = 1,
+                strKey = 3,
+            },
+            [2] = 1,
+            [3] = torch.randn(3, 5),
+            strKey = 4
+        }
+        return self.output
+    end
+    function Mod:updateGradInput(input, gradOutput)
+        self.gradInput = input:clone():fill(0)
+        return self.gradInput
+    end
+    local mod = totem.dummyClass()
+    totem.nn.checkGradients(tester, mod, torch.randn(5, 5), 1e-6)
+end
+
 tester:add(tests):run()
