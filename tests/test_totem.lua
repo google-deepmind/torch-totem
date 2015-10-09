@@ -6,7 +6,7 @@ local subtester = totem.Tester()
 subtester._success = function(self, message) return true, message end
 subtester._failure = function(self, message) return false, message end
 
-local tests = {}
+local tests = totem.TestSuite()
 
 local MESSAGE = "a really useful informative error message"
 
@@ -179,6 +179,17 @@ function tests.test_TensorArgumentErrorMessages()
   end
 end
 
+function tests.testSuite_duplicateTests()
+    function createDuplicateTests()
+        local tests = totem.TestSuite()
+        function tests.testThis()
+        end
+        function tests.testThis()
+        end
+    end
+    tester:assertErrorPattern(createDuplicateTests,
+                              "Test testThis is already defined.")
+end
 
 function tests.test_checkGradientsAcceptsGenericOutput()
   require 'nn'

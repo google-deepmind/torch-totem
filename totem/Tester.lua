@@ -296,8 +296,12 @@ function Tester:eq(got, expected, label, precision, ret)
     elseif type(expected) == "userdata" then
         if torch.isTensor(got) then
             self:_eqSize(got, expected, label)
-            diff = got:clone():add(-1, expected:type(got:type())):abs():max()
-            ok = diff <= precision
+            if got:nElement() == 0 then
+                ok = true
+            else
+                diff = got:clone():add(-1, expected:type(got:type())):abs():max()
+                ok = diff <= precision
+            end
         else
             return self:_eqStorage(got, expected, label, precision)
         end
@@ -365,8 +369,8 @@ function Tester:_eqTable(got, expected, label, precision)
         if type(value2) == 'table' then
             value2 = 'table2'
         end
-        self:_failure(string.format("%s inconsistent values: %s != %s at position %d",
-                      label, tostring(value1), tostring(value2), position))
+        self:_failure(string.format("%s inconsistent values: %s != %s at position %s",
+                      label, tostring(value1), tostring(value2), tostring(position)))
     end
 
     if #got ~= #expected then
@@ -722,13 +726,23 @@ Return:
 ]]
 function Tester:add(f, name)
     name = name or 'unknown'
-    if type(f) == "table" then
+    if type(f) == "table" and f.__isTotemTestSuite then
+        for i,v in pairs(f.__tests) do
+            self:add(v,i)
+        end
+    elseif type(f) == "table" then
         for i,v in pairs(f) do
             self:add(v,i)
         end
     elseif type(f) == "function" then
+        if self.tests[name] ~= nil then
+            error('Test with name ' .. name .. ' already exists!')
+        end
         self.tests[name] = f
     elseif type(f) == "number" then
+        if self.tests[name] ~= nil then
+            error('Test with name ' .. name .. ' already exists!')
+        end
         -- a test that has already been run
         self.tests[name] = function() self:_assert_sub(f == 0) end
     elseif type(f) == "string" then
@@ -739,3 +753,5 @@ function Tester:add(f, name)
     end
     return self
 end
+
+
