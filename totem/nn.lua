@@ -63,7 +63,7 @@ local function calcLoss(output, gradOutput)
     if torch.isTensor(output) then
         return output.dot(output, gradOutput)
     elseif type(output) == 'number' then
-      return output * gradOutput
+        return output * gradOutput
     end
 
     local loss = 0
