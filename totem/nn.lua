@@ -53,8 +53,8 @@ local function produceRandomGradOutput(output)
     end
 
     local gradOutput = {}
-    for i = 1, #output do
-        table.insert(gradOutput, produceRandomGradOutput(output[i]))
+    for k, v in pairs(output) do
+        gradOutput[k] = produceRandomGradOutput(v)
     end
     return gradOutput
 end
@@ -64,11 +64,13 @@ end
 local function calcLoss(output, gradOutput)
     if torch.isTensor(output) then
         return output.dot(output, gradOutput)
+    elseif type(output) == 'number' then
+        return output * gradOutput
     end
 
     local loss = 0
-    for i = 1, #output do
-        loss = loss + calcLoss(output[i], gradOutput[i])
+    for k, v in pairs(output) do
+        loss = loss + calcLoss(v, gradOutput[k])
     end
     return loss
 end
@@ -367,9 +369,6 @@ function totem.nn.checkTypeCastable(tester, module, input, toType, precision)
                 table.insert(accOrig, curlevel)
             elseif obj_type == toType then
                 table.insert(accToType, curlevel)
-            else
-                -- I am not sure what the correct way to deal with objects that are tensors, but are neither of the original or the new type
-                tester:assert(false, 'found an object ' .. curlevel .. ' which is neither of from type or to type' )
             end
             return accOrig, accToType, visitedObj
         else

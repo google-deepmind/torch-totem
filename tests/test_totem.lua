@@ -6,7 +6,7 @@ local subtester = totem.Tester()
 subtester._success = function(self, message) return true, message end
 subtester._failure = function(self, message) return false, message end
 
-local tests = {}
+local tests = totem.TestSuite()
 
 local MESSAGE = "a really useful informative error message"
 
@@ -179,5 +179,40 @@ function tests.test_TensorArgumentErrorMessages()
   end
 end
 
+function tests.testSuite_duplicateTests()
+    function createDuplicateTests()
+        local tests = totem.TestSuite()
+        function tests.testThis()
+        end
+        function tests.testThis()
+        end
+    end
+    tester:assertErrorPattern(createDuplicateTests,
+                              "Test testThis is already defined.")
+end
+
+function tests.test_checkGradientsAcceptsGenericOutput()
+    require 'nn'
+    local Mod = torch.class('totem.dummyClass', 'nn.Module')
+    function Mod:updateOutput(input)
+        self.output = {
+            [1] = {
+                [1] = torch.randn(3, 5),
+                [2] = 1,
+                strKey = 3,
+            },
+            [2] = 1,
+            [3] = torch.randn(3, 5),
+            strKey = 4
+        }
+        return self.output
+    end
+    function Mod:updateGradInput(input, gradOutput)
+        self.gradInput = input:clone():fill(0)
+        return self.gradInput
+    end
+    local mod = totem.dummyClass()
+    totem.nn.checkGradients(tester, mod, torch.randn(5, 5), 1e-6)
+end
 
 tester:add(tests):run()
