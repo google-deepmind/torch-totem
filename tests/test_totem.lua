@@ -1,5 +1,7 @@
 require 'totem'
 
+local tablex = require 'pl.tablex'
+
 local tester = totem.Tester()
 
 local subtester = totem.Tester()
@@ -7,6 +9,10 @@ subtester._success = function(self, message) return true, message end
 subtester._failure = function(self, message) return false, message end
 
 local tests = totem.TestSuite()
+
+local test_name_passed_to_setUp
+local calls_to_setUp = 0
+local calls_to_tearDown = 0
 
 local MESSAGE = "a really useful informative error message"
 
@@ -215,4 +221,50 @@ function tests.test_checkGradientsAcceptsGenericOutput()
     totem.nn.checkGradients(tester, mod, torch.randn(5, 5), 1e-6)
 end
 
+
+function tests.test_setUp()
+    tester:asserteq(test_name_passed_to_setUp, 'test_setUp')
+    for key, value in pairs(tester.tests) do
+        tester:assertne(key, '_setUp')
+    end
+end
+
+
+function tests.test_tearDown()
+    for key, value in pairs(tester.tests) do
+        tester:assertne(key, '_tearDown')
+    end
+end
+
+
+function tests._setUp(name)
+    test_name_passed_to_setUp = name
+    calls_to_setUp = calls_to_setUp + 1
+end
+
+
+function tests._tearDown(name)
+    calls_to_tearDown = calls_to_tearDown + 1
+end
+
+
 tester:add(tests):run()
+
+
+-- Additional tests to check that _setUp and _tearDown were called.
+local test_count = tablex.size(tester.tests)
+local postTests = totem.TestSuite()
+local postTester = totem.Tester()
+
+function postTests.test_setUp(tester)
+    postTester:asserteq(calls_to_setUp, test_count,
+                        "Expected " .. test_count .. " calls to _setUp")
+end
+
+function postTests.test_tearDown()
+    postTester:asserteq(calls_to_tearDown, test_count,
+                       "Expected " .. test_count .. " calls to _tearDown")
+end
+
+
+postTester:add(postTests):run()

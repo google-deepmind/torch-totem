@@ -36,6 +36,39 @@ A test script can be written as follows:
 
 The command `totem-init` can be used to generate an empty test.
 
+## Set-up and tear-down functions
+It is sometimes useful to introduce initialization or destruction code that
+is shared among all tests in a test suite. Totem allows you to define special
+`_setUp` and `_tearDown` test functions. The `_setUp` function is interpreted
+as a set-up function that is called *before* every test. Similarly, the
+`_tearDown` is interpreted as a tear-down function that is called *after*
+every test. The following example illustrates this.
+
+    require 'totem'
+
+    local tests = totem.TestSuite()
+
+    local tester = totem.Tester()
+
+    function tests.TestA()
+      ....
+    end
+
+    function tests.TestB()
+      ....
+    end
+
+    function tests._setUp(testName)
+      .... set-up / initialization code
+    end
+
+    function tests._tearDown(testName)
+      .... tear-down / clean-up up code
+    end
+
+    return tester:add(tests):run()
+
+
 ## Command-line usage
 
 When running the script from the command-line you get a number of options:
