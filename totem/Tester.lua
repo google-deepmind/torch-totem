@@ -17,6 +17,8 @@ local Tester = torch.class('totem.Tester')
 function Tester:__init()
     self.errors = {}
     self.tests = {}
+    self._setUps = {}
+    self._tearDowns = {}
     self.curtestname = ''
 end
 
@@ -741,6 +743,22 @@ local function countFormat(n)
 end
 
 
+-- Runs set-up functions, if any.
+function Tester:_runSetUps(name)
+    for i, setUp in ipairs(self._setUps) do
+        setUp(name)
+    end
+end
+
+
+-- Runs tear-down functions, if any.
+function Tester:_runTearDowns(name)
+    for i, tearDown in ipairs(self._tearDowns) do
+        tearDown(name)
+    end
+end
+
+
 function Tester:_run(tests, summary, earlyAbort, rethrow)
 
     self.countasserts = 0
@@ -771,6 +789,7 @@ function Tester:_run(tests, summary, earlyAbort, rethrow)
         io.flush()
 
         local stat, message, pass
+        self:_runSetUps(name)
         if rethrow then
             stat = true
             local nerr = #self.errors
@@ -779,6 +798,7 @@ function Tester:_run(tests, summary, earlyAbort, rethrow)
         else
             stat, message, pass = self:_pcall(fn)
         end
+        self:_runTearDowns(name)
 
         io.write('\r')
         io.write(strinit)
@@ -810,7 +830,10 @@ function Tester:_run(tests, summary, earlyAbort, rethrow)
 end
 
 
---[[ Adds one or more test cases to a totem.Tester instance.
+--[[ Add one or more test methods to tester. Any method named "_setUp" is
+interpreted as a set-up function that is called *before* every test. Similarly,
+any method named "_tearDown" is interpreted as a tear-down function that is
+called *after* every test.
 
 Arguments:
 
@@ -838,10 +861,16 @@ function Tester:add(f, name)
             self:add(v,i)
         end
     elseif type(f) == "function" then
-        if self.tests[name] ~= nil then
-            error('Test with name ' .. name .. ' already exists!')
+        if name == '_setUp' then
+            table.insert(self._setUps, f)
+        elseif name == '_tearDown' then
+            table.insert(self._tearDowns, f)
+        else
+            if self.tests[name] ~= nil then
+                error('Test with name ' .. name .. ' already exists!')
+            end
+            self.tests[name] = f
         end
-        self.tests[name] = f
     elseif type(f) == "number" then
         if self.tests[name] ~= nil then
             error('Test with name ' .. name .. ' already exists!')
