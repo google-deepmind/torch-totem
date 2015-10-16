@@ -363,11 +363,12 @@ function totem.nn.checkTypeCastable(tester, module, input, toType, precision)
                 end
             end
             return accOrig, accToType, visitedObj
-        elseif torch.typename(obj) and torch.typename(obj):find('Tensor') then
+        elseif torch.isTensor(obj) then
             local obj_type = torch.typename(obj)
             if obj_type == origType then
                 table.insert(accOrig, curlevel)
-            elseif obj_type == toType then
+            end
+            if obj_type == toType then
                 table.insert(accToType, curlevel)
             end
             return accOrig, accToType, visitedObj
@@ -397,7 +398,7 @@ function totem.nn.checkTypeCastable(tester, module, input, toType, precision)
 
     -- check that all components of the tensor have been correctly cast
     local origTypeTensors, newTypeTensors, _ = findTensorsByType(module)
-    assert( #origTypeTensors == 0 , "after casting, module still contains objects of original type: " .. pretty.write(origTypeTensors))
+    assert( #origTypeTensors == 0 or origType == toType, "after casting, module still contains objects of original type: " .. pretty.write(origTypeTensors))
     assert( #newTypeTensors > 0 , "after casting, module still contains no objects of new type: " .. pretty.write(newTypeTensors))
 
     -- run module forward and back in the cast state
