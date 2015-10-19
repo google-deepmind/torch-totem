@@ -3,7 +3,7 @@
 totem.nn = {}
 
 local function inputType(t)
-    return type(t) == 'table' and t[1]:type() or t:type()
+    return type(t) == 'table' and inputType(t[1]) or t:type()
 end
 
 

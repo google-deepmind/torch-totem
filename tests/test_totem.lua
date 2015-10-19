@@ -4,8 +4,11 @@ local tablex = require 'pl.tablex'
 
 local tester = totem.Tester()
 
+local MESSAGE = "a really useful informative error message"
+
 local subtester = totem.Tester()
-subtester._success = function(self, message) return true, message end
+-- The message only interests us in case of failure
+subtester._success = function(self) return true, MESSAGE end
 subtester._failure = function(self, message) return false, message end
 
 local tests = totem.TestSuite()
@@ -13,8 +16,6 @@ local tests = totem.TestSuite()
 local test_name_passed_to_setUp
 local calls_to_setUp = 0
 local calls_to_tearDown = 0
-
-local MESSAGE = "a really useful informative error message"
 
 local function meta_assert_success(success, message)
   tester:assert(success==true, "assert wasn't successful")
@@ -112,6 +113,39 @@ function tests.test_assertTable()
   end
 end
 
+function tests.test_assertEqRet()
+  -- Create subtester - only a 'ret' value of false should trigger assertions
+  local function makeRetTester(ret)
+    local retTester = totem.Tester()
+    local retTests = totem.TestSuite()
+
+    function retTests.testEq()
+      retTester:eq({1}, {1}, '', 0, ret)
+      retTester:eq({1}, {2}, '', 0, ret)
+    end
+
+    return retTester:add(retTests)
+  end
+
+  local retTesterNoAssert = makeRetTester(true)
+  local retTesterAssert = makeRetTester(false)
+
+  -- Change the write function so that the sub testers do not output anything
+  local oldWrite = io.write
+  io.write = function() end
+
+  retTesterNoAssert:run()
+  retTesterAssert:run()
+
+  -- Restore write function
+  io.write = oldWrite
+
+  tester:asserteq(retTesterNoAssert.countasserts, 0,
+                  "retTesterNoAssert should not have asserted")
+
+  tester:asserteq(retTesterAssert.countasserts, 2,
+                  "retTesterAssert should have asserted twice")
+end
 
 local function good_fn() end
 local function bad_fn() error("muahaha!") end

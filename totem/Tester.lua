@@ -23,29 +23,34 @@ function Tester:__init()
 end
 
 
--- Add a success to the test
-function Tester:_success()
-    self.countasserts = self.countasserts + 1
-    local name = self.curtestname
-    self.assertionPass[name] = self.assertionPass[name] + 1
+-- Add a success to the test. If ret is true then this does not assert.
+function Tester:_success(ret)
+    if not ret then
+        self.countasserts = self.countasserts + 1
+        local name = self.curtestname
+        self.assertionPass[name] = self.assertionPass[name] + 1
+    end
     return true
 end
 
 
--- Add a failure to the test
-function Tester:_failure(message)
-    self.countasserts = self.countasserts + 1
-    local name = self.curtestname
-    self.assertionFail[name] = self.assertionFail[name] + 1
-    local ss = debug.traceback('tester',2) or ''
-    ss = ss:match('.-\n([^\n]+\n[^\n]+)\n[^\n]+xpcall') or ''
-    if type(message) == 'function' then
-        message = message()
-    end
-    if message then
-        self.errors[#self.errors+1] = self.curtestname .. '\n' .. message .. '\n' .. ss .. '\n'
-    else
-        self.errors[#self.errors+1] = self.curtestname .. '\n' .. ss .. '\n'
+-- Add a failure to the test. If ret is true then this does not assert.
+function Tester:_failure(message, ret)
+    if not ret then
+        self.countasserts = self.countasserts + 1
+        local name = self.curtestname
+        self.assertionFail[name] = self.assertionFail[name] + 1
+        local ss = debug.traceback('tester',2) or ''
+        ss = ss:match('.-\n([^\n]+\n[^\n]+)\n[^\n]+xpcall') or ''
+        if type(message) == 'function' then
+            message = message()
+        end
+        if message then
+            self.errors[#self.errors+1] = self.curtestname .. '\n' .. message ..
+                                          '\n' .. ss .. '\n'
+        else
+            self.errors[#self.errors+1] = self.curtestname .. '\n' .. ss .. '\n'
+        end
     end
     return false
 end
@@ -57,13 +62,15 @@ Arguments:
 
 - `condition` (boolean)
 - `message` (string or function : nil → string)
+- `ret` (boolean) whether to return a value only, and not run assertion
+                 (default is false)
 
 ]]
-function Tester:_assert_sub (condition, message)
+function Tester:_assert_sub (condition, message, ret)
     if condition then
-        return self:_success(message)
+        return self:_success(ret)
     else
-        return self:_failure(message)
+        return self:_failure(message, ret)
     end
 end
 
@@ -79,8 +86,9 @@ Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assert(condition, message)
     return self:_assert_sub(condition,
-            string.format('%s\n%s  condition=%s', message, ' BOOL violation ',
-                tostring(condition)))
+                            string.format('%s\n%s  condition=%s',
+                                          message, ' BOOL violation ',
+                                          tostring(condition)))
 end
 
 
@@ -96,8 +104,10 @@ Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertlt(val, condition, message)
     return self:_assert_sub(val < condition,
-            string.format('%s\n%s  val=%s, condition=%s', message, ' LT(<) violation ',
-                tostring(val), tostring(condition)))
+                            string.format('%s\n%s  val=%s, condition=%s',
+                                          message,' LT(<) violation ',
+                                          tostring(val),
+                                          tostring(condition)))
 end
 
 
@@ -113,8 +123,9 @@ Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertgt(val, condition, message)
    return self:_assert_sub(val > condition,
-        string.format('%s\n%s  val=%s, condition=%s',message,' GT(>) violation ',
-            tostring(val), tostring(condition)))
+                           string.format('%s\n%s  val=%s, condition=%s',
+                                         message, ' GT(>) violation ',
+                                         tostring(val), tostring(condition)))
 end
 
 
@@ -130,8 +141,10 @@ Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertle(val, condition, message)
     return self:_assert_sub(val <= condition,
-            string.format('%s\n%s  val=%s, condition=%s', message, ' LE(<=) violation ',
-                tostring(val), tostring(condition)))
+                            string.format('%s\n%s  val=%s, condition=%s',
+                                          message, ' LE(<=) violation ',
+                                          tostring(val),
+                                          tostring(condition)))
 end
 
 
@@ -148,8 +161,9 @@ Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertge(val, condition, message)
     return self:_assert_sub(val >= condition,
-            string.format('%s\n%s  val=%s, condition=%s', message, ' GE(>=) violation ',
-                tostring(val), tostring(condition)))
+                            string.format('%s\n%s  val=%s, condition=%s',
+                                          message, ' GE(>=) violation ',
+                                          tostring(val), tostring(condition)))
 end
 
 
@@ -165,8 +179,9 @@ Returns (boolean) whether the test succeeded.
 ]]
 function Tester:asserteq(actual, expected, message)
     return self:_assert_sub(actual == expected,
-            string.format('%s\n%s  actual=%s, expected=%s', message, ' EQ(==) violation ',
-                tostring(actual), tostring(expected)))
+                            string.format('%s\n%s  actual=%s, expected=%s',
+                                          message,' EQ(==) violation ',
+                                          tostring(actual), tostring(expected)))
 end
 
 --[[ Asserts that two variables are almost equal.
@@ -185,8 +200,9 @@ function Tester:assertalmosteq(a, b, tolerance, message)
     tolerance = tolerance or 1e-16
     local err = math.abs(a-b)
     return self:_assert_sub(err < tolerance,
-            string.format('%s\n%s  val=%s, tolerance=%s', message, ' ALMOST_EQ(==) violation ',
-                tostring(err), tostring(tolerance)))
+                            string.format('%s\n%s  val=%s, tolerance=%s',
+                                          message, ' ALMOST_EQ(==) violation ',
+                                          tostring(err), tostring(tolerance)))
 end
 
 --[[ Asserts that the value of a variable is not equal to a given value.
@@ -202,8 +218,9 @@ Returns (boolean) whether the test succeeded.
 function Tester:assertne (val, condition, message)
     return self:_assert_sub(val ~= condition,
             function ()
-                return string.format('%s\n%s  val=%s, condition=%s', message, ' NE(~=) violation ',
-                    tostring(val), tostring(condition))
+                return string.format('%s\n%s  val=%s, condition=%s', message,
+                                     ' NE(~=) violation ', tostring(val),
+                                     tostring(condition))
             end)
 end
 
@@ -224,7 +241,8 @@ Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertTensorEq(ta, tb, tolerance, message)
     local success, subMessage = totem.areTensorsEq(ta, tb, tolerance)
-    return self:_assert_sub(success, string.format("%s\n%s", message, subMessage))
+    return self:_assert_sub(success, string.format("%s\n%s", message,
+                                                   subMessage))
 end
 
 
@@ -245,7 +263,8 @@ Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertTensorNe(ta, tb, tolerance, message)
     local success, subMessage = totem.areTensorsNe(ta, tb, tolerance)
-    return self:_assert_sub(success, string.format("%s\n%s", message, subMessage))
+    return self:_assert_sub(success, string.format("%s\n%s", message,
+                                                   subMessage))
 end
 
 
@@ -265,8 +284,9 @@ Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertTableEq(actual, expected, message)
     return self:_assert_sub(totem.assertTableEq(actual, expected),
-            string.format('%s\n%s actual=%s, expected=%s', message, ' TableEQ(==) violation ',
-                tostring(actual), tostring(expected)))
+                            string.format('%s\n%s actual=%s, expected=%s',
+                                          message, ' TableEQ(==) violation ',
+                                          tostring(actual), tostring(expected)))
 end
 
 
@@ -284,8 +304,9 @@ Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertTableNe(ta, tb, message)
     return self:_assert_sub(totem.assertTableNe(ta, tb),
-            string.format('%s\n%s ta=%s, tb=%s', message, ' TableNE(~=) violation ',
-                tostring(ta), tostring(tb)))
+                            string.format('%s\n%s ta=%s, tb=%s', message,
+                                          ' TableNE(~=) violation ',
+                                          tostring(ta), tostring(tb)))
 end
 
 
@@ -328,7 +349,8 @@ Arguments:
 Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertErrorMsg(f, errmsg, message)
-    return self:assertErrorObj(f, function(err) return err == errmsg end, message)
+    return self:assertErrorObj(f, function(err) return err == errmsg end,
+                               message)
 end
 
 
@@ -343,7 +365,9 @@ Arguments:
 Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertErrorPattern(f, errPattern, message)
-    return self:assertErrorObj(f, function(err) return string.find(err, errPattern) ~= nil end, message)
+    return self:assertErrorObj(f, function(err)
+                                      return string.find(err, errPattern) ~= nil
+                                  end, message)
 end
 
 
@@ -363,9 +387,9 @@ Returns (boolean) whether the test succeeded.
 function Tester:assertErrorObj(f, errcomp, message, condition)
     local status, err = pcall(f)
     return self:_assert_sub(status == (condition or false) and errcomp(err),
-            string.format('%s\n%s  err=%s', message,' ERROR violation ', tostring(err)))
+                            string.format('%s\n%s  err=%s', message,
+                                          ' ERROR violation ', tostring(err)))
 end
-
 
 
 --[[ General assert on equality with a supplied precision (number, table,
@@ -388,30 +412,29 @@ Returns (boolean) whether the test succeeded.
 ]]
 function Tester:eq(got, expected, label, precision, ret)
 
-    ret = ret or false
     label = label or "eq"
     precision = precision or 0
 
     local ok = false
     local diff = 0
     if type(got) ~= type(expected) then
-        if not ret then
-            self:_failure(string.format("%s inconsistent types: %s and %s",label,type(got),type(expected)))
-        end
-        return false
+        return self:_failure(string.format("%s inconsistent types: %s and %s",
+                             label, type(got), type(expected)), ret)
     elseif type(expected) == "table" then
-        return self:_eqTable(got, expected, label, precision)
+        return self:_eqTable(got, expected, label, precision, ret)
     elseif type(expected) == "userdata" then
         if torch.isTensor(got) then
-            self:_eqSize(got, expected, label)
-            if got:nElement() == 0 then
-                ok = true
-            else
-                diff = got:clone():add(-1, expected:type(got:type())):abs():max()
-                ok = diff <= precision
+            -- Needs to return on size inequality or the next steps would fail
+            if not self:_eqSize(got, expected, label, ret) then
+                return false
             end
+            if got:nElement() == 0 then
+                return true
+            end
+            diff = got:clone():add(-1, expected:type(got:type())):abs():max()
+            ok = diff <= precision
         else
-            return self:_eqStorage(got, expected, label, precision)
+            return self:_eqStorage(got, expected, label, precision, ret)
         end
     else
         if precision == 0 then
@@ -422,18 +445,17 @@ function Tester:eq(got, expected, label, precision, ret)
         end
     end
 
-    if not ret then
-        self:_assert_sub(ok,
-            function ()
-                return string.format("%s violation at precision %g (max diff=%g): %s != %s",
-                        tostring(label), precision, diff, tostring(got), tostring(expected))
-            end)
-    end
-    return ok
+    return self:_assert_sub(ok, string.format("%s violation at precision %g" ..
+                                              " (max diff=%g): %s != %s",
+                                              tostring(label), precision, diff,
+                                              tostring(got),
+                                              tostring(expected)),
+                            ret)
 end
 
 
-function Tester:_eqSize(ta, tb, label)
+function Tester:_eqSize(ta, tb, label, ret)
+
     local ok = true
     if ta:nDimension() ~= tb:nDimension() then
         ok = false
@@ -446,62 +468,68 @@ function Tester:_eqSize(ta, tb, label)
         end
     end
 
-    self:_assert_sub(ok,
-        function ()
-            return string.format("%s inconsistent size: %s != %s", tostring(label), tostring(ta), tostring(tb))
-        end)
+    return self:_assert_sub(ok, string.format("%s inconsistent size: %s != %s",
+                                              tostring(label), tostring(ta),
+                                              tostring(tb)),
+                            ret)
 end
 
 
-function Tester:_eqStorage(got, expected, label, precision)
-    self:_assert_sub(#got == #expected,
-        string.format("%s inconsistent storage size: %s != %s", label, #got, #expected))
+function Tester:_eqStorage(got, expected, label, precision, ret)
+
+    if #got ~= #expected then
+        return self:_failure(string.format("%s inconsistent storage size: " ..
+                                           "%s != %s", label, #got, #expected),
+                             ret)
+    end
     for i = 1, #expected do
         if not self:eq(got[i], expected[i], label, precision, true) then
-            self:_failure(string.format("%s inconsistent values: %s != %s at position %d",
-                          label, tostring(got[i]), tostring(expected[i]), i))
-            return false
+            return self:_failure(string.format("%s inconsistent values: " ..
+                                               "%s != %s at position %d", label,
+                                               tostring(got[i]),
+                                               tostring(expected[i]), i),
+                                 ret)
         end
     end
 
-    self:_success()
-    return true
+    return self:_success(ret)
 end
 
 
-function Tester:_eqTable(got, expected, label, precision)
-    local failure = function(value1, value2, position)
+function Tester:_eqTable(got, expected, label, precision, ret)
+
+    local failure = function(value1, value2, position, ret)
         if type(value1) == 'table' then
             value1 = 'table1'
         end
         if type(value2) == 'table' then
             value2 = 'table2'
         end
-        self:_failure(string.format("%s inconsistent values: %s != %s at position %s",
-                      label, tostring(value1), tostring(value2), tostring(position)))
+        return self:_failure(string.format("%s inconsistent values: " ..
+                                           "%s != %s at position %s", label,
+                                           tostring(value1), tostring(value2),
+                                           tostring(position)),
+                             ret)
     end
 
     if #got ~= #expected then
-        self:_failure(string.format("%s inconsistent table size: %s != %s", label, #got, #expected))
-        return false
+        return self:_failure(string.format("%s inconsistent table size:" ..
+                             " %s != %s", label, #got, #expected), ret)
     end
 
     for k, v in pairs(expected) do
         if not self:eq(got[k], v, label, precision, true) then
-            failure(got[k], v, k)
-            return false
+            return failure(got[k], v, k, ret)
         end
     end
 
     for k, v in pairs(got) do
         if not self:eq(v, expected[k], label, precision, true) then
-            failure(v, expected[k], k)
-            return false
+            return failure(v, expected[k], k, ret)
         end
     end
 
-    self:_success()
-    return true
+    return self:_success(ret)
 end
 
 
@@ -509,7 +537,9 @@ function Tester:_pcall(f)
     local nerr = #self.errors
     local stat, result = xpcall(f, debug.traceback)
     if not stat then
-        self.errors[#self.errors+1] = self.curtestname .. '\n Function call failed \n' .. result .. '\n'
+        self.errors[#self.errors+1] = self.curtestname ..
+                                      '\n Function call failed \n' ..
+                                      result .. '\n'
     end
     return stat, result, stat and (nerr == #self.errors)
 end
@@ -567,9 +597,11 @@ function Tester:_report(tests, ntests, nfailures, nerrors, summary)
     io.write('Completed ' .. pluralize(self.countasserts, 'assert'))
     io.write(' in ' .. pluralize(ntests, 'test') .. ' with ')
 
-    io.write(coloured(pluralize(nfailures, 'failure'), nfailures == 0 and c.green or c.red))
+    io.write(coloured(pluralize(nfailures, 'failure'),
+                      nfailures == 0 and c.green or c.red))
     io.write(' and ')
-    io.write(coloured(pluralize(nerrors, 'error'), nerrors == 0 and c.green or c.magenta))
+    io.write(coloured(pluralize(nerrors, 'error'),
+                      nerrors == 0 and c.green or c.magenta))
     io.write('\n')
 
     if #self.errors ~= 0 and not summary then
@@ -593,7 +625,8 @@ function Tester:_logOutput(f, tests)
         npasses = npasses + self.assertionPass[name]
         nfails = nfails + self.assertionFail[name]
         nerrors = nerrors + self.testError[name]
-        f:write(unwords(name, self.assertionPass[name], self.assertionFail[name], self.testError[name]))
+        f:write(unwords(name, self.assertionPass[name],
+                        self.assertionFail[name], self.testError[name]))
         f:write('\n')
     end
     f:write(unwords('[total]', npasses, nfails, nerrors))
@@ -660,7 +693,8 @@ all the tests are run.
                 for i = 2,x:nDimension() do
                     sz = sz .. 'x' .. _tostring(x:size(i))
                 end
-                return string.format('Tensor of size %s, min=%g, max=%g', sz, x:min(), x:max())
+                return string.format('Tensor of size %s, min=%g, max=%g', sz,
+                                     x:min(), x:max())
             else
                 return _tostring(x)
             end
@@ -672,7 +706,8 @@ all the tests are run.
         self:_listTests(tests)
         return 0
     else
-        local status = self:_run(tests, args.summary, args.early_abort, args.rethrow)
+        local status = self:_run(tests, args.summary, args.early_abort,
+                                 args.rethrow)
         if args.log_output then
             self:_logOutput(args.log_output, tests)
         end
@@ -711,7 +746,9 @@ function Tester:_getTests(candidates)
     local function getMatchingNames(pattern)
         local matchingNames = {}
         for name,_ in pairs(self.tests) do
-            if string.match(name, pattern) then table.insert(matchingNames, name) end
+            if string.match(name, pattern) then
+                table.insert(matchingNames, name)
+            end
         end
         if next(matchingNames) == nil then
             lapp.error(string.format("Invalid test case '%s'", pattern), true)
@@ -784,7 +821,9 @@ function Tester:_run(tests, summary, earlyAbort, rethrow)
         -- TODO: compute max length of name and cut it down to size if needed
         local strinit = coloured(string.format(cfmt,i), c.cyan)
                       .. self.curtestname .. ' '
-                      .. string.rep('.', NCOLS-6-2-cfmtlen-self.curtestname:len()) .. ' '
+                      .. string.rep('.',
+                                    NCOLS-6-2-cfmtlen-self.curtestname:len())
+                      .. ' '
         io.write(strinit .. bracket(coloured('WAIT', c.cyan)))
         io.flush()
 
@@ -815,7 +854,8 @@ function Tester:_run(tests, summary, earlyAbort, rethrow)
         io.flush()
 
         if earlyAbort and (i<ntests) and (not stat or not pass) then
-            io.write('Aborting on first error, not all tests have been executed\n')
+            io.write('Aborting on first error, ' ..
+                     'not all tests have been executed\n')
             break
         end
 
@@ -881,7 +921,9 @@ function Tester:add(f, name)
         -- a file containing tests
         self:add(dofile(f), f)
     else
-        error('Tester:add(f) expects a function, a table of functions, a pre-computed test result, or a filename.\nFound' .. tostring(f) .. ' instead for the test ' .. name)
+        error('Tester:add(f) expects a function, a table of functions, ' ..
+              'a pre-computed test result, or a filename.\nFound' ..
+              tostring(f) .. ' instead for the test ' .. name)
     end
     return self
 end
