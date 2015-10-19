@@ -232,6 +232,14 @@ function totem.nn.checkGradients(tester, module, input, precision)
         end
         local function feval()
             torch.setRNGState(rngState)
+            --[[ 
+            If init grad params need to be set to zero, call zeroGradParameters
+            in case it has side-effects that are required for proper gradient 
+            calculations.
+            --]]
+            if paramName ~= "params" then
+                module:zeroGradParameters()
+            end
             gradParams:copy(initialGradParams)
             module:forward(input)
             local loss = calcLoss(module.output, gradOutput)
