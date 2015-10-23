@@ -119,15 +119,16 @@ function totem.assertTensorNe(ta, tb, tolerance)
   assert(totem.areTensorsNe(ta, tb, tolerance))
 end
 
-
 local function isIncludedIn(ta, tb)
-    if type(ta) ~= 'table' or type(tb) ~= 'table' then
-        return ta == tb
-    end
-    for k, v in pairs(tb) do
-        if not totem.assertTableEq(ta[k], v) then return false end
-    end
-    return true
+  if type(ta) ~= 'table' or type(tb) ~= 'table' then
+    return ta == tb, '--> (Table 1) value: '.. tostring(ta) ..
+                     ', (Table 2) value: ' .. tostring(tb)
+  end
+  for k, v in pairs(tb) do
+    local equal, errMsg = totem.assertTableEq(ta[k], v)
+    if not equal then return false, '['.. k .. ']' .. errMsg end
+  end
+  return true, nil
 end
 
 --[[ Asserts that two tables are equal (comparing values, recursively).
@@ -137,9 +138,19 @@ Arguments:
 * `actual` (table)
 * `expected` (table)
 
+Returns:
+1. success, a boolean indicating equality
+2. failure_message, string or nil (if not equal) where string starts with
+   the hierarchical location (e.g. [ind1][ind2]) of the first difference
+   between the two tables followed by the values in those locations for
+   both tables.
 ]]
 function totem.assertTableEq(ta, tb)
-    return isIncludedIn(ta, tb) and isIncludedIn(tb, ta)
+    local bIncAB, mesAB = isIncludedIn(ta, tb)
+    if not bIncAB then return bIncAB, mesAB end
+    local bIncBA, mesBA = isIncludedIn(tb, ta)
+    if not bIncBA then return bIncBA, mesBA end
+    return true, nil
 end
 
 --[[ Asserts that two tables are *not* equal (comparing values, recursively).

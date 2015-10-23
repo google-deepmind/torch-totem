@@ -283,10 +283,14 @@ Arguments:
 Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertTableEq(actual, expected, message)
-    return self:_assert_sub(totem.assertTableEq(actual, expected),
-                            string.format('%s\n%s actual=%s, expected=%s',
-                                          message, ' TableEQ(==) violation ',
-                                          tostring(actual), tostring(expected)))
+    local equal, errMsg = totem.assertTableEq(actual, expected)
+    local fullErrMsg
+    if not equal then
+      fullErrMsg = 'Element mismatch in location Table' .. errMsg
+    end
+    return self:_assert_sub(
+        equal, string.format('%s\nTableEQ(==) violation, %s ',
+                             message, tostring(fullErrMsg)))
 end
 
 
