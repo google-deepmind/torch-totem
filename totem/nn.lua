@@ -7,6 +7,21 @@ local function inputType(t)
 end
 
 
+-- Returns a function to call to revert the RNG state
+-- as it was when the checkpoint was called.
+local function checkpointRNG()
+    local state = torch.getRNGState()
+    local custate = rawget(_G, 'cutorch') and cutorch.getRNGState() or nil
+    local function revertRNG()
+        torch.setRNGState(state)
+        if custate then
+            cutorch.setRNGState(custate)
+        end
+    end
+    return revertRNG
+end
+
+
 local function appendParamPairs(paramPairs, input, gradInput, namePrefix)
     if input == nil then
         return
@@ -218,7 +233,7 @@ function totem.nn.checkGradients(tester, module, input, precision)
 
     -- A fixed seed is used for the gradient checking.
     -- The forward() pass is free to have a stochastic output.
-    local rngState = torch.getRNGState()
+    local revertRNG = checkpointRNG()
     ensureGradInput(module, input)
 
     local gradOutput = produceRandomGradOutput(module.output)
@@ -231,10 +246,10 @@ function totem.nn.checkGradients(tester, module, input, precision)
             initialGradParams:zero()
         end
         local function feval()
-            torch.setRNGState(rngState)
-            --[[ 
+            revertRNG()
+            --[[
             If init grad params need to be set to zero, call zeroGradParameters
-            in case it has side-effects that are required for proper gradient 
+            in case it has side-effects that are required for proper gradient
             calculations.
             --]]
             if paramName ~= "params" then
@@ -398,7 +413,7 @@ function totem.nn.checkTypeCastable(tester, module, input, toType, precision)
         end
     end
 
-    local rngState = torch.getRNGState()
+    local revertRNG = checkpointRNG()
     local preOutput = module:updateOutput(input)
     local gradOutput = produceRandomGradOutput(preOutput)
     local preGradInput = module:updateGradInput(input, gradOutput)
@@ -410,7 +425,7 @@ function totem.nn.checkTypeCastable(tester, module, input, toType, precision)
     assert( #newTypeTensors > 0 , "after casting, module still contains no objects of new type: " .. pretty.write(newTypeTensors))
 
     -- run module forward and back in the cast state
-    torch.setRNGState(rngState)
+    revertRNG()
     local castInput = castTableOfTensors(input, toType)
     local castOutput = module:forward(castInput)
     local castGradOutput = castTableOfTensors(gradOutput, toType)
@@ -420,7 +435,7 @@ function totem.nn.checkTypeCastable(tester, module, input, toType, precision)
 
     -- cast module back to original type
     tester:assertNoError(function() module:type(origType) end, "module cannot be base back to " .. origType)
-    torch.setRNGState(rngState)
+    revertRNG()
     castTableOfTensors(input, origType)
     castTableOfTensors(gradOutput, origType)
     local postOutput = module:updateOutput(input)
@@ -447,14 +462,14 @@ Arguments:
 ]]
 function totem.nn.checkSerializable(tester, module, input, precision)
     precision = precision or 1e-6
-    local rngState = torch.getRNGState()
+    local revertRNG = checkpointRNG()
     local preOutput = module:updateOutput(input)
     local gradOutput = produceRandomGradOutput(preOutput)
     local preGradInput = module:updateGradInput(input, gradOutput)
     local filename = paths.tmpname()
     tester:assertNoError(function() torch.save(filename, module) end, "module cannot be serialized")
     local module = torch.load(filename)
-    torch.setRNGState(rngState)
+    revertRNG()
     local postOutput = module:updateOutput(input)
     local postGradInput = module:updateGradInput(input, gradOutput)
     tester:eq(preOutput, postOutput, "module output differs before and after serialization", precision)
