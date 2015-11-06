@@ -113,29 +113,75 @@ function tests.test_assertTable()
   end
 end
 
-function tests.test_assertEqRet()
-  -- Create subtester - only a 'ret' value of false should trigger assertions
-  local function makeRetTester(ret)
-    local retTester = totem.Tester()
-    local retTests = totem.TestSuite()
+--[[ Returns a Tester with `numSuccess` success cases, `numFailure` failure
+  cases, and with an error if `hasError` is true.
+  Success and fail tests are evaluated with tester:eq
+]]
+local function genDummyTest(numSuccess, numFailure, hasError, ret)
+  hasError = hasError or false
+  ret = ret or false
 
-    function retTests.testEq()
-      retTester:eq({1}, {1}, '', 0, ret)
-      retTester:eq({1}, {2}, '', 0, ret)
+  local dummyTester = totem.Tester()
+  local dummyTests = totem.TestSuite()
+
+  if numSuccess > 0 then
+    function dummyTests.testDummySuccess()
+      for i = 1, numSuccess do
+        dummyTester:eq({1}, {1}, '', 0, ret)
+      end
     end
-
-    return retTester:add(retTests)
   end
 
-  local retTesterNoAssert = makeRetTester(true)
-  local retTesterAssert = makeRetTester(false)
+  if numFailure > 0 then
+    function dummyTests.testDummyFailure()
+      for i = 1, numFailure do
+        dummyTester:eq({1}, {2}, '', 0, ret)
+      end
+    end
+  end
+
+  if hasError then
+    function dummyTests.testDummyError()
+      error(i)
+    end
+  end
+
+  return dummyTester:add(dummyTests)
+end
+
+function tests.test_assertEqRet()
+  -- Create subtester - only a 'ret' value of false should trigger assertions
+
+  local retTesterNoAssert        = genDummyTest(2, 0, false, true)
+  local retTesterAssertSuccess   = genDummyTest(2, 0, false)
+  local retTesterAssertFail      = genDummyTest(1, 1, false)
+  local retTesterAssertError     = genDummyTest(1, 0, true)
+  local retTesterAssertErrorFail = genDummyTest(0, 2, true)
+
 
   -- Change the write function so that the sub testers do not output anything
   local oldWrite = io.write
   io.write = function() end
 
-  retTesterNoAssert:run()
-  retTesterAssert:run()
+  local success, msg = pcall(retTesterNoAssert.run, retTesterNoAssert)
+  tester:asserteq(success, true,
+                  "retTesterNoAssert should always return true (no asserts)")
+
+  success, msg = pcall(retTesterAssertFail.run, retTesterAssertFail)
+  tester:asserteq(success, false,
+                  "retTesterAssertFail should return false (tests failed)")
+
+  success, msg = pcall(retTesterAssertSuccess.run, retTesterAssertSuccess)
+  tester:asserteq(success, true,
+                  "retTesterAssertSuccess should return true (tests succeeded)")
+
+  success, msg = pcall(retTesterAssertError.run, retTesterAssertError)
+  tester:asserteq(success, false,
+                  "retTesterAssertError should return false (tests with error)")
+
+  success, msg = pcall(retTesterAssertErrorFail.run, retTesterAssertErrorFail)
+  tester:asserteq(success, false,
+      "retTesterAssertErrorFail should return false (tests with error + fail)")
 
   -- Restore write function
   io.write = oldWrite
@@ -143,8 +189,17 @@ function tests.test_assertEqRet()
   tester:asserteq(retTesterNoAssert.countasserts, 0,
                   "retTesterNoAssert should not have asserted")
 
-  tester:asserteq(retTesterAssert.countasserts, 2,
-                  "retTesterAssert should have asserted twice")
+  tester:asserteq(retTesterAssertFail.countasserts, 2,
+                  "retTesterAssertFail should have asserted twice")
+
+  tester:asserteq(retTesterAssertSuccess.countasserts, 2,
+                  "retTesterAssertSuccess should have asserted twice")
+
+  tester:asserteq(retTesterAssertError.countasserts, 1,
+                  "retTesterAssertError should have asserted once")
+
+  tester:asserteq(retTesterAssertErrorFail.countasserts, 2,
+                  "retTesterAssertErrorFail should have asserted twice")
 end
 
 local function good_fn() end
@@ -255,6 +310,54 @@ function tests.test_checkGradientsAcceptsGenericOutput()
     totem.nn.checkGradients(tester, mod, torch.randn(5, 5), 1e-6)
 end
 
+
+function tests.test_returnWithErrorFailureSuccess()
+  local emptyTest    = genDummyTest(0, 0, false)
+  local sucTest      = genDummyTest(1, 0, false)
+  local multSucTest  = genDummyTest(4, 0, false)
+  local failTest     = genDummyTest(0, 1, false)
+  local errTest      = genDummyTest(0, 0, true)
+
+  local errFailTest  = genDummyTest(0, 1, true)
+  local errSucTest   = genDummyTest(1, 0, true)
+  local failSucTest  = genDummyTest(1, 1, false)
+
+  local failSucErrTest  = genDummyTest(1, 1, true)
+
+  -- change io.write behavior to not output sub-tests
+  local oldWrite = io.write
+  io.write = function() end
+
+  local success, msg = pcall(emptyTest.run, emptyTest)
+  tester:asserteq(success, true, "pcall should succeed for empty tests")
+
+  local success, msg = pcall(sucTest.run, sucTest)
+  tester:asserteq(success, true, "pcall should succeed for 1 successful test")
+
+  local success, msg = pcall(multSucTest.run, multSucTest)
+  tester:asserteq(success, true, "pcall should succeed for 2+ successful tests")
+
+  local success, msg = pcall(failTest.run, failTest)
+  tester:asserteq(success, false, "pcall should fail for tests with failure")
+
+  local success, msg = pcall(errTest.run, errTest)
+  tester:asserteq(success, false, "pcall should fail for tests with error")
+
+  local success, msg = pcall(errFailTest.run, errFailTest)
+  tester:asserteq(success, false, "pcall should fail for error+fail tests")
+
+  local success, msg = pcall(errSucTest.run, errSucTest)
+  tester:asserteq(success, false, "pcall should fail for error+success tests")
+
+  local success, msg = pcall(failSucTest.run, failSucTest)
+  tester:asserteq(success, false, "pcall should fail for fail+success tests")
+
+  local success, msg = pcall(failSucErrTest.run, failSucErrTest)
+  tester:asserteq(success, false, "pcall should fail for fail+success+err test")
+
+  -- restoring io.write original behavior
+  io.write = oldWrite
+end
 
 function tests.test_setUp()
     tester:asserteq(test_name_passed_to_setUp, 'test_setUp')
