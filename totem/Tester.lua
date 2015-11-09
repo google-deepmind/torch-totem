@@ -920,7 +920,8 @@ function Tester:add(f, name)
         self.tests[name] = function() self:_assert_sub(f == 0) end
     elseif type(f) == "string" then
         -- a file containing tests
-        self:add(dofile(f), f)
+        local success, res = pcall(dofile, f)
+        self:add((success and res) or -1, f)
     else
         error('Tester:add(f) expects a function, a table of functions, ' ..
               'a pre-computed test result, or a filename.\nFound' ..
