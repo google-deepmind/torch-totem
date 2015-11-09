@@ -734,13 +734,10 @@ function Tester:run(tests)
     else
         status = self:_run(self:_getTests(tests))
     end
-    -- Detect whether we're running directly from a top-level script. This
-    -- will not work for e.g. th which is an interpreter defined in lua
-    if debug.getinfo(3) then
-        return status
-    else
-        os.exit(status, true)
-    end
+    -- Throws an error on test failure/error, so that test script returns
+    -- with nonzero return value.
+    assert(status == 0, 'An error was found while running tests!')
+    return 0
 end
 
 
@@ -923,7 +920,8 @@ function Tester:add(f, name)
         self.tests[name] = function() self:_assert_sub(f == 0) end
     elseif type(f) == "string" then
         -- a file containing tests
-        self:add(dofile(f), f)
+        local success, res = pcall(dofile, f)
+        self:add((success and res) or -1, f)
     else
         error('Tester:add(f) expects a function, a table of functions, ' ..
               'a pre-computed test result, or a filename.\nFound' ..

@@ -47,5 +47,5 @@ if files then
         end
     end
 
-    tester:run()
+    pcall(tester.run, tester)
 end
