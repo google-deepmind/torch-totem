@@ -85,6 +85,7 @@ Arguments:
 Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assert(condition, message)
+    message = message or ''
     return self:_assert_sub(condition,
                             string.format('%s\n%s  condition=%s',
                                           message, ' BOOL violation ',
@@ -103,6 +104,7 @@ Arguments:
 Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertlt(val, condition, message)
+    message = message or ''
     return self:_assert_sub(val < condition,
                             string.format('%s\n%s  val=%s, condition=%s',
                                           message,' LT(<) violation ',
@@ -122,10 +124,11 @@ Arguments:
 Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertgt(val, condition, message)
-   return self:_assert_sub(val > condition,
-                           string.format('%s\n%s  val=%s, condition=%s',
-                                         message, ' GT(>) violation ',
-                                         tostring(val), tostring(condition)))
+    message = message or ''
+    return self:_assert_sub(val > condition,
+                            string.format('%s\n%s  val=%s, condition=%s',
+                                          message, ' GT(>) violation ',
+                                          tostring(val), tostring(condition)))
 end
 
 
@@ -140,6 +143,7 @@ Arguments:
 Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertle(val, condition, message)
+    message = message or ''
     return self:_assert_sub(val <= condition,
                             string.format('%s\n%s  val=%s, condition=%s',
                                           message, ' LE(<=) violation ',
@@ -160,6 +164,7 @@ Arguments:
 Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertge(val, condition, message)
+    message = message or ''
     return self:_assert_sub(val >= condition,
                             string.format('%s\n%s  val=%s, condition=%s',
                                           message, ' GE(>=) violation ',
@@ -178,6 +183,7 @@ Arguments:
 Returns (boolean) whether the test succeeded.
 ]]
 function Tester:asserteq(actual, expected, message)
+    message = message or ''
     return self:_assert_sub(actual == expected,
                             string.format('%s\n%s  actual=%s, expected=%s',
                                           message,' EQ(==) violation ',
@@ -198,6 +204,7 @@ Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertalmosteq(a, b, tolerance, message)
     tolerance = tolerance or 1e-16
+    message = message or ''
     local err = math.abs(a-b)
     return self:_assert_sub(err < tolerance,
                             string.format('%s\n%s  val=%s, tolerance=%s',
@@ -216,6 +223,7 @@ Arguments:
 Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertne (val, condition, message)
+    message = message or ''
     return self:_assert_sub(val ~= condition,
             function ()
                 return string.format('%s\n%s  val=%s, condition=%s', message,
@@ -240,6 +248,7 @@ Arguments:
 Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertTensorEq(ta, tb, tolerance, message)
+    message = message or ''
     local success, subMessage = totem.areTensorsEq(ta, tb, tolerance)
     return self:_assert_sub(success, string.format("%s\n%s", message,
                                                    subMessage))
@@ -262,6 +271,7 @@ Arguments:
 Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertTensorNe(ta, tb, tolerance, message)
+    message = message or ''
     local success, subMessage = totem.areTensorsNe(ta, tb, tolerance)
     return self:_assert_sub(success, string.format("%s\n%s", message,
                                                    subMessage))
@@ -283,6 +293,7 @@ Arguments:
 Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertTableEq(actual, expected, message)
+    message = message or ''
     local equal, errMsg = totem.assertTableEq(actual, expected)
     local fullErrMsg
     if not equal then
@@ -307,6 +318,7 @@ Arguments:
 Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertTableNe(ta, tb, message)
+    message = message or ''
     return self:_assert_sub(totem.assertTableNe(ta, tb),
                             string.format('%s\n%s ta=%s, tb=%s', message,
                                           ' TableNE(~=) violation ',
@@ -389,6 +401,7 @@ Arguments:
 Returns (boolean) whether the test succeeded.
 ]]
 function Tester:assertErrorObj(f, errcomp, message, condition)
+    message = message or ''
     local status, err = pcall(f)
     return self:_assert_sub(status == (condition or false) and errcomp(err),
                             string.format('%s\n%s  err=%s', message,
