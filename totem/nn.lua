@@ -238,6 +238,7 @@ function totem.nn.checkGradients(tester, module, input, precision)
 
     local gradOutput = produceRandomGradOutput(module.output)
     for _, pair in ipairs(extractParamTensors(module, input)) do
+        local unpack = unpack or table.unpack
         local params, gradParams, paramName = unpack(pair)
         -- The gradient with respect to the parameters
         -- will be accumulated to non-zero initial gradParams.
