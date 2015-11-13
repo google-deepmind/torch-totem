@@ -274,6 +274,7 @@ Returns (boolean) whether the test succeeded.
 function Tester:assertTensorNe(ta, tb, tolerance, message)
     message = message or ''
     local success, subMessage = totem.areTensorsNe(ta, tb, tolerance)
+    subMessage = subMessage or ''
     return self:_assert_sub(success, string.format("%s\n%s", message,
                                                    subMessage))
 end

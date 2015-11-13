@@ -142,7 +142,7 @@ local function genDummyTest(numSuccess, numFailure, hasError, ret)
 
   if hasError then
     function dummyTests.testDummyError()
-      error(i)
+      error('dummy error')
     end
   end
 
