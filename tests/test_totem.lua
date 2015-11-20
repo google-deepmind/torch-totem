@@ -1,3 +1,4 @@
+require 'nn'
 require 'totem'
 
 local tablex = require 'pl.tablex'
@@ -287,7 +288,6 @@ function tests.testSuite_duplicateTests()
 end
 
 function tests.test_checkGradientsAcceptsGenericOutput()
-    require 'nn'
     local Mod = torch.class('totem.dummyClass', 'nn.Module')
     function Mod:updateOutput(input)
         self.output = {
@@ -310,6 +310,29 @@ function tests.test_checkGradientsAcceptsGenericOutput()
     totem.nn.checkGradients(tester, mod, torch.randn(5, 5), 1e-6)
 end
 
+function tests.test_checkTypePreservesSharing()
+  local mod = nn.Linear(10, 10)
+  local clonedMod = mod:clone('weights', 'bias', 'gradWeight', 'gradBias')
+  local seq = nn.Sequential():add(mod):add(clonedMod)
+  totem.nn.checkTypePreservesSharing(tester, seq)
+
+  local Mod = torch.class('totem.classWhichBreaksSharing', 'nn.Linear')
+  function Mod:type(type)
+    self.weight = self.weight:type(type)
+    self.bias = self.bias:type(type)
+  end
+  local mod = totem.classWhichBreaksSharing(10, 10)
+  local clonedMod = mod:clone('weight', 'bias', 'gradWeight', 'gradBias')
+  local seq = nn.Sequential():add(mod):add(clonedMod)
+  local dummyTest = totem.Tester()
+  local test = {}
+  function test.checkShouldFail()
+      totem.nn.checkTypePreservesSharing(dummyTest, seq, 'torch.FloatTensor')
+  end
+  dummyTest:add(test)
+  local testSuccess, msg = pcall(dummyTest.run, dummyTest)
+  tester:asserteq(testSuccess, false, 'expect test failure, mod breaks sharing')
+end
 
 function tests.test_returnWithErrorFailureSuccess()
   local emptyTest    = genDummyTest(0, 0, false)
