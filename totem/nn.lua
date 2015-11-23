@@ -336,6 +336,70 @@ end
 
 
 
+--[[ Checks a module's implementation of type preserves parameter sharing.
+
+  It is easy to implement a custom type method that re-initializes a tensor's
+  type without preserving sharing across parameters. This test checks for such
+  share breakage by cloning the module, sharing the parameters, and then
+  changing the type of a container module (nn.Sequential). We then check the
+  parameters are still shared between the passed module and its clone.
+]]
+function totem.nn.checkTypePreservesSharing(tester, module, toType)
+  local function errorMessage(paramType, i, firstTensor, secondTensor)
+    local errMsg = 'Sharing is broken for ' .. paramType .. ' #' .. i .. '\n' ..
+      tostring(firstTensor) .. ' vs\n' .. tostring(secondTensor) .. '\nReason: '
+    if firstTensor:storage() ~= secondTensor:storage() then
+      errMsg = errMsg .. '\n+ different storage pointer'
+    end
+    if firstTensor:storageOffset() ~= secondTensor:storageOffset() then
+      errMsg = errMsg .. '\n+ different storage offset'
+    end
+    if not firstTensor:isSameSizeAs(secondTensor) then
+      errMsg = errMsg .. '\n+ different tensor sizes'
+    elseif not torch.LongTensor(firstTensor:stride()):eq(
+        torch.LongTensor(secondTensor:stride())):all() then
+      errMsg = errMsg .. '\n+ different tensor strides'
+    end
+    return errMsg
+  end
+
+  local function typePreservesSharing(module, toType)
+    if not module.parameters then
+      return true
+    end
+    local pretty = require 'pl.pretty'
+    local toType = toType or 'torch.FloatTensor'
+    local cloneModule = module:clone()
+    local params, gradParams = module:parameters()
+    local cloneParams, cloneGradParams = cloneModule:parameters()
+    if params then
+      for i = 1, #params do
+        cloneParams[i]:set(params[i])
+        cloneGradParams[i]:set(gradParams[i])
+      end
+      local sequential = nn.Sequential():add(module):add(cloneModule)
+      -- Calls type and checks parameters are still shared.
+      sequential:type(toType)
+      params, gradParams = module:parameters()
+      cloneParams, cloneGradParams = cloneModule:parameters()
+      for i = 1, #params do
+        if not cloneParams[i]:isSetTo(params[i]) then
+          return false, errorMessage('parameter', i, params[i], cloneParams[i])
+        elseif not cloneGradParams[i]:isSetTo(gradParams[i]) then
+          return false, errorMessage('gradParameter', i, gradParams[i],
+                                     cloneGradParams[i])
+        end
+      end
+    end
+    return true
+  end
+
+  local check, message = typePreservesSharing(module, toType)
+  tester:assert(check, message)
+end
+
+
+
 --[[ Checks that a module can be cast to another type.
 
 This test fails if the cast operation itself fails (i.e. `module.type()`), or
