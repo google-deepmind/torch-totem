@@ -10,6 +10,10 @@ ways:
 * the test runner can output test results in a simple machine-readable file
 * the package includes some standard tests for nn modules
 
+## Install
+* Retrieve this repo
+* Run: `luarocks make`
+
 ## Basic test description
 
 A test script can be written as follows:
