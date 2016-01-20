@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/deepmind/torch-totem.svg?branch=master)](https://travis-ci.org/deepmind/torch-totem)
-
 # Totem - Torch test module
 
 Totem is a small test package in the style of torch.Tester. The interface is

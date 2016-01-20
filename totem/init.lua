@@ -1,6 +1,54 @@
 require 'torch'
 
 totem = {}
+totem.debugMode = false
+
+
+local paths = require 'paths'
+local file = require 'learning.lua.file'
+local flags = require 'learning.lua.flags'
+local logging = require 'learning.lua.logging'
+
+--[[ Helper function to get Google blaze test test_srcdir ]]
+function totem.getTestDataPath(filename)
+  local path = os.getenv("TEST_SRCDIR")
+  if not filename then
+    return path
+  end
+  return paths.concat(path, filename)
+end
+
+--[[ Helper function to get Google blaze test test_tmpdir ]]
+local testTmp
+local testTmpPath = os.getenv("TEST_TMPDIR")
+function totem.getTestTmpPath(filename)
+  if not testTmpPath then
+    testTmp = file.TempPath()
+    testTmpPath = testTmp:Path()
+    logging.info('Created local temporary directory ' .. testTmpPath)
+  end
+  if not filename then
+    return testTmpPath
+  end
+  return paths.concat(testTmpPath, filename)
+end
+
+--[[ The debug command-line flag sets debugMode to true.
+This means that if the --debug flag is used on the command-line to enable
+debugging on exception, then any test errors will break in the debugger.
+]]
+flags.init('')
+if flags.FLAGS['debug'] then
+  totem.debugMode = flags.FLAGS['debug']:getValue()
+end
+
+-- Local google3 modification: mute logging when running assertError* to
+-- avoid cluttered stderr output.
+totem._muteLogging = true
+function totem.muteLogging(mute)
+  totem._muteLogging = mute
+end
+-- End of local modification.
 
 local ondemand = {nn = true}
 local mt = {}
