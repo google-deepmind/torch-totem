@@ -192,6 +192,7 @@ function Tester:asserteq(actual, expected, message)
                                           tostring(actual), tostring(expected)))
 end
 
+
 --[[ Asserts that two variables are almost equal.
 
 Arguments:
@@ -214,6 +215,7 @@ function Tester:assertalmosteq(a, b, tolerance, message)
                                           tostring(err), tostring(tolerance)))
 end
 
+
 --[[ Asserts that the value of a variable is not equal to a given value.
 
 Arguments:
@@ -233,7 +235,6 @@ function Tester:assertne(val, condition, message)
                                      tostring(condition))
             end)
 end
-
 
 
 --[[ Asserts that two tensors are equal.
@@ -285,7 +286,7 @@ end
 
 --[[ Asserts that two storages are equal.
 
-The storages are considered unequal if they are of the same sizes and types
+The storages are considered equal if they are of the same sizes and types
 and if the maximum elementwise difference <= tolerance.
 
 Arguments:
@@ -329,51 +330,113 @@ function Tester:assertStorageNe(sa, sb, tolerance, message)
                                                    subMessage))
 end
 
---[[ Asserts that two tables are equal by recursively comparing their values.
 
-This function recursively traverses the two tables and asserts the equality of
-their non-table elements. Note that this method simply uses the `==` operator
-to assess the equality of two non-table elements.
+--[[ Asserts that two tables are equal or different, depending on the parameter
+negate. The values of the two tables are being compared recursively.
 
 Arguments:
 
-* `actual` (table) the first table.
-* `expected` (table) the second table.
-* `message` (string) the error message to be displayed in case of failure.
+* `ta` (table) the first table.
+* `tb` (table) the second table.
+* `negate` (boolean) whether we assert equality (if negate == false) or equality
+    (if negate == true).
+
+For reasons of backward compatibility, this function can take two different sets
+of arguments:
+
+Further arguments (case 1):
+* `toleranceOrMessage` (number, default = 0) the maximum difference allowed for
+    each element of the table.
+* `messageOrNil` (optional string) the error message to be displayed in case of
+    failure.
+
+Further arguments (case 2):
+* `toleranceOrMessage` (optional string) the error message to be displayed in
+    case of failure.
+In this case the tolerance is set to 0.
 
 Returns (boolean) whether the test succeeded.
 ]]
-function Tester:assertTableEq(actual, expected, message)
-    message = message or ''
-    local equal, errMsg = totem.assertTableEq(actual, expected)
-    local fullErrMsg
-    if not equal then
-      fullErrMsg = 'Element mismatch in location Table' .. errMsg
+function Tester:_assertTableEqOrNeq(ta, tb, negate, toleranceOrMessage,
+                                    messageOrNil)
+    local tolerance, message
+    if type(toleranceOrMessage) == 'number' then
+      tolerance = toleranceOrMessage
+      message = messageOrNil or ''
+    else
+      tolerance = 0
+      message = toleranceOrMessage or ''
     end
-    return self:_assert_sub(
-        equal, string.format('%s\nTableEQ(==) violation, %s ',
-                             message, tostring(fullErrMsg)))
+    local success, subMessage = totem.areTablesEq(ta, tb, tolerance, negate)
+    subMessage = subMessage or ''
+    return self:_assert_sub(success, string.format("%s\n%s", message,
+                                                   subMessage))
 end
 
 
---[[ Asserts that two tables are not equal.
+--[[ Asserts that two tables are equal. This function takes the same format
+as the ones for Storages and Tensors.
+
+The values of the two tables are being compared recursively.
+
+Arguments:
+
+Arguments:
+
+* `ta` (table) the first table.
+* `tb` (table) the second table.
+
+For reasons of backward compatibility, this function can take two different sets
+of arguments:
+
+Further arguments (case 1):
+* `toleranceOrMessage` (number, default = 0) the maximum difference allowed for
+    each element of the table.
+* `messageOrNil` (optional string) the error message to be displayed in case of
+    failure.
+
+Further arguments (case 2):
+* `toleranceOrMessage` (optional string) the error message to be displayed in
+    case of failure.
+In this case the tolerance is set to 0.
+
+Returns (boolean) whether the test succeeded.
+]]
+function Tester:assertTableEq(ta, tb, toleranceOrMessage, messageOrNil)
+    return self:_assertTableEqOrNeq(ta, tb, false, toleranceOrMessage,
+                                    messageOrNil)
+ end
+
+
+--[[ Asserts that two tables are not equal. This function takes the same format
+as the ones for Storages and Tensors.
 
 The values of the two tables are being compared recursively.
 
 Arguments:
 
 * `ta` (table) the first table.
-* `expected` (table) the second table.
-* `message` (string) the error message to be displayed in case of failure.
+* `tb` (table) the second table.
+
+For reasons of backward compatibility, this function can take two different sets
+of arguments:
+
+Further arguments (case 1):
+* `toleranceOrMessage` (number, default = 0) the maximum difference allowed for
+    each element of the table.
+* `messageOrNil` (optional string) the error message to be displayed in case of
+    failure.
+
+Further arguments (case 2):
+* `toleranceOrMessage` (optional string) the error message to be displayed in
+    case of failure.
+In this case the tolerance is set to 0.
 
 Returns (boolean) whether the test succeeded.
 ]]
-function Tester:assertTableNe(ta, tb, message)
-    message = message or ''
-    return self:_assert_sub(totem.assertTableNe(ta, tb),
-                            string.format('%s\n%s ta=%s, tb=%s', message,
-                                          ' TableNE(~=) violation ',
-                                          tostring(ta), tostring(tb)))
+function Tester:assertTableNe(ta, tb, toleranceOrMessage, messageOrNil)
+    return self:_assertTableEqOrNeq(ta, tb, true, toleranceOrMessage,
+                                    messageOrNil)
 end
 
 
@@ -442,11 +505,11 @@ end
 
 Arguments:
 
-* `f`, (function) function to be tested.
-* `errcomp`, (function : obj → bool) function that compares the error object
+* `f` (function) function to be tested.
+* `errcomp` (function : obj → bool) function that compares the error object
     to its expected value.
-* `message`, (string) the error message to be displayed in case of failure.
-* `condition`, (boolean) assert condition on status of pcall
+* `message` (string) the error message to be displayed in case of failure.
+* `condition` (boolean) assert condition on status of pcall
     (defaults to false).
 
 Returns (boolean) whether the test succeeded.
@@ -471,144 +534,80 @@ function Tester:assertErrorObj(f, errcomp, message, condition)
 end
 
 
---[[ General assert on equality with a supplied precision (number, table,
-user data).
+--[[ General assert on equality or inequality with a supplied tolerance.
 
-In case of tables the comparison is carried out recursively with precision
-being passed down to sub-objects.
+Tables are compared recursively. Tensors and storages are compared elementwise.
+Numbers are compared within tolerance. Other types are compared for strict
+equality.
 
 Arguments:
 
-* `got`, (number, table, userData, string) the value computed during the test
+* `got` (number, table, userData, string) the value computed during the test
     execution.
-* `expected`, (number, table, userData) the expected value.
-* `label`, (string) used for output labelling.
-* `precision`, (number) the maximum allowed difference for numbers or tensors.
-* `ret`, (boolean) whether to return a value instead of running an assertion
+* `expected` (number, table, userData) the expected value.
+* `negate` (boolean) whether we assert equality (if negate == false) or equality
+    (if negate == true).
+* `label` (string) used for output labelling.
+* `tolerance` (number) the maximum allowed difference for numbers or tensors.
+* `ret` (boolean) whether to return a value instead of running an assertion
     (default is false).
 
 Returns (boolean) whether the test succeeded.
 ]]
-function Tester:eq(got, expected, label, precision, ret)
-
-    label = label or "eq"
-    precision = precision or 0
-
-    local ok = false
-    local diff = 0
-    if type(got) ~= type(expected) then
-        return self:_failure(string.format("%s inconsistent types: %s and %s",
-                             label, type(got), type(expected)), ret)
-    elseif type(expected) == "table" then
-        return self:_eqTable(got, expected, label, precision, ret)
-    elseif type(expected) == "userdata" then
-        if torch.isTensor(got) then
-            -- Needs to return on size inequality or the next steps would fail
-            if not self:_eqSize(got, expected, label, ret) then
-                return false
-            end
-            if got:nElement() == 0 then
-                return true
-            end
-            diff = got:clone():add(-1, expected:type(got:type())):abs():max()
-            ok = diff <= precision
-        else
-            return self:_eqStorage(got, expected, label, precision, ret)
-        end
-    else
-        if precision == 0 then
-            ok = (got == expected)
-        else
-            diff = math.abs(got - expected)
-            ok = (diff <= precision)
-        end
-    end
-
-    return self:_assert_sub(ok, string.format("%s violation at precision %g" ..
-                                              " (max diff=%g): %s != %s",
-                                              tostring(label), precision, diff,
-                                              tostring(got),
-                                              tostring(expected)),
-                            ret)
+function Tester:_eqOrNeq(got, expected, negate, message, tolerance, ret)
+    ret = ret or false
+    tolerance = tolerance or 0
+    message = message or ''
+    local success, subMessage = totem.areEq(got, expected, tolerance, negate)
+    subMessage = subMessage or ''
+    return self:_assert_sub(success, string.format("%s\n%s", message,
+                                                   subMessage), ret)
 end
 
 
-function Tester:_eqSize(ta, tb, label, ret)
+--[[ General assert on equality with a supplied tolerance.
 
-    local ok = true
-    if ta:nDimension() ~= tb:nDimension() then
-        ok = false
-    else
-        for i = 1, ta:nDimension() do
-            if ta:size(i) ~= tb:size(i) then
-                ok = false
-                break
-            end
-        end
-    end
+Tables are compared recursively. Tensors and storages are compared elementwise.
+Numbers are compared within tolerance. Other types are compared for strict
+equality.
 
-    return self:_assert_sub(ok, string.format("%s inconsistent size: %s != %s",
-                                              tostring(label), tostring(ta),
-                                              tostring(tb)),
-                            ret)
+Arguments:
+
+* `got` (number, table, userData, string) the value computed during the test
+    execution.
+* `expected` (number, table, userData) the expected value.
+* `label` (string) used for output labelling.
+* `tolerance` (number) the maximum allowed difference for numbers or tensors.
+* `ret` (boolean) whether to return a value instead of running an assertion
+    (default is false).
+
+Returns (boolean) whether the test succeeded.
+]]
+function Tester:eq(got, expected, message, tolerance, ret)
+    return self:_eqOrNeq(got, expected, false, message, tolerance, ret)
 end
 
 
-function Tester:_eqStorage(got, expected, label, precision, ret)
+--[[ General assert on inequality with a supplied tolerance.
 
-    if #got ~= #expected then
-        return self:_failure(string.format("%s inconsistent storage size: " ..
-                                           "%s != %s", label, #got, #expected),
-                             ret)
-    end
-    for i = 1, #expected do
-        if not self:eq(got[i], expected[i], label, precision, true) then
-            return self:_failure(string.format("%s inconsistent values: " ..
-                                               "%s != %s at position %d", label,
-                                               tostring(got[i]),
-                                               tostring(expected[i]), i),
-                                 ret)
-        end
-    end
+Tables are compared recursively. Tensors and storages are compared elementwise.
+Numbers are compared within tolerance. Other types are compared for strict
+equality.
 
-    return self:_success(ret)
-end
+Arguments:
 
+* `got` (number, table, userData, string) the value computed during the test
+    execution.
+* `expected` (number, table, userData) the expected value.
+* `label` (string) used for output labelling.
+* `tolerance`, (number) the maximum allowed difference for numbers or tensors.
+* `ret` (boolean) whether to return a value instead of running an assertion
+    (default is false).
 
-function Tester:_eqTable(got, expected, label, precision, ret)
-
-    local failure = function(value1, value2, position, ret)
-        if type(value1) == 'table' then
-            value1 = 'table1'
-        end
-        if type(value2) == 'table' then
-            value2 = 'table2'
-        end
-        return self:_failure(string.format("%s inconsistent values: " ..
-                                           "%s != %s at position %s", label,
-                                           tostring(value1), tostring(value2),
-                                           tostring(position)),
-                             ret)
-    end
-
-    if #got ~= #expected then
-        return self:_failure(string.format("%s inconsistent table size:" ..
-                             " %s != %s", label, #got, #expected), ret)
-    end
-
-    for k, v in pairs(expected) do
-        if not self:eq(got[k], v, label, precision, true) then
-            return failure(got[k], v, k, ret)
-        end
-    end
-
-    for k, v in pairs(got) do
-        if not self:eq(v, expected[k], label, precision, true) then
-            return failure(v, expected[k], k, ret)
-        end
-    end
-
-    return self:_success(ret)
+Returns (boolean) whether the test succeeded.
+]]
+function Tester:ne(got, expected, message, tolerance, ret)
+    return self:_eqOrNeq(got, expected, true, message, tolerance, ret)
 end
 
 
@@ -902,7 +901,8 @@ function Tester:_run(tests, summary, earlyAbort, rethrow)
         local strinit = coloured(string.format(cfmt, i), c.cyan)
                       .. self.curtestname .. ' '
                       .. string.rep('.',
-                                    NCOLS-6-2-cfmtlen-self.curtestname:len())
+                                    NCOLS - 6 - 2 -
+                                    cfmtlen - self.curtestname:len())
                       .. ' '
         io.write(strinit .. bracket(coloured('WAIT', c.cyan)))
         io.flush()
@@ -913,7 +913,7 @@ function Tester:_run(tests, summary, earlyAbort, rethrow)
             stat = true
             local nerr = #self.errors
             message = fn()
-            pass = nerr==#self.errors
+            pass = nerr == #self.errors
         else
             stat, message, pass = self:_pcall(fn)
         end
@@ -933,7 +933,7 @@ function Tester:_run(tests, summary, earlyAbort, rethrow)
         io.write('\n')
         io.flush()
 
-        if earlyAbort and (i<ntests) and (not stat or not pass) then
+        if earlyAbort and (i < ntests) and (not stat or not pass) then
             io.write('Aborting on first error, ' ..
                      'not all tests have been executed\n')
             break
@@ -973,12 +973,12 @@ Returns the totem.Tester instance.
 function Tester:add(f, name)
     name = name or 'unknown'
     if type(f) == "table" and f.__isTotemTestSuite then
-        for i,v in pairs(f.__tests) do
-            self:add(v,i)
+        for i, v in pairs(f.__tests) do
+            self:add(v, i)
         end
     elseif type(f) == "table" then
-        for i,v in pairs(f) do
-            self:add(v,i)
+        for i, v in pairs(f) do
+            self:add(v, i)
         end
     elseif type(f) == "function" then
         if name == '_setUp' then

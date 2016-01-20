@@ -67,9 +67,9 @@ function tests.test_assertTensorSizes()
   local t2 = torch.ones(3)
   local t3 = torch.ones(1, 2)
   meta_assert_failure(subtester:assertTensorEq(t1, t2, 1e-6, MESSAGE))
-  meta_assert_failure(subtester:assertTensorNe(t1, t2, 1e-6, MESSAGE))
+  meta_assert_success(subtester:assertTensorNe(t1, t2, 1e-6, MESSAGE))
   meta_assert_failure(subtester:assertTensorEq(t1, t3, 1e-6, MESSAGE))
-  meta_assert_failure(subtester:assertTensorNe(t1, t3, 1e-6, MESSAGE))
+  meta_assert_success(subtester:assertTensorNe(t1, t3, 1e-6, MESSAGE))
 end
 
 function tests.test_assertTensorEq()
@@ -169,6 +169,36 @@ function tests.test_assertTable()
     meta_assert_success(subtester:assertTableEq(t1, t2, MESSAGE))
     meta_assert_failure(subtester:assertTableNe(t1, t2, MESSAGE))
   end
+end
+
+
+function tests.test_genericEq()
+  local tensor = torch.rand(100, 100)
+  local sameTensor = tensor:clone()
+  local t1 = {1, "a", key = "value", tensor = tensor, subtable = {"nested"}}
+  local t2 = {1, "a", key = "value", tensor = sameTensor, subtable = {"nested"}}
+  meta_assert_success(subtester:eq(t1, t2, MESSAGE, 1e-6))
+  meta_assert_failure(subtester:ne(t1, t2, MESSAGE, 1e-6))
+  for k, v in pairs(t1) do
+    local x = "something else"
+    t2[k] = nil
+    t2[x] = v
+    meta_assert_success(subtester:ne(t1, t2, MESSAGE, 1e-6))
+    meta_assert_failure(subtester:eq(t1, t2, MESSAGE, 1e-6))
+    t2[x] = nil
+    t2[k] = x
+    meta_assert_success(subtester:ne(t1, t2, MESSAGE, 1e-6))
+    meta_assert_failure(subtester:eq(t1, t2, MESSAGE, 1e-6))
+    t2[k] = v
+    meta_assert_success(subtester:eq(t1, t2, MESSAGE, 1e-6))
+    meta_assert_failure(subtester:ne(t1, t2, MESSAGE, 1e-6))
+  end
+  meta_assert_success(subtester:eq(3, 3, MESSAGE, 1e-6))
+  meta_assert_failure(subtester:ne(3, 3, MESSAGE, 1e-6))
+  meta_assert_success(subtester:ne(3, "3", MESSAGE, 1e-6))
+  meta_assert_failure(subtester:eq(3, "3", MESSAGE, 1e-6))
+  meta_assert_success(subtester:eq("3", "3", MESSAGE, 1e-6))
+  meta_assert_failure(subtester:ne("3", "3", MESSAGE, 1e-6))
 end
 
 --[[ Returns a Tester with `numSuccess` success cases, `numFailure` failure
@@ -278,6 +308,25 @@ function tests.test_assertErrorPattern()
   meta_assert_failure(subtester:assertErrorPattern(bad_fn, "hehe", MESSAGE))
 end
 
+function tests.test_TensorEqChecksEmpty()
+  local t1 = torch.DoubleTensor()
+  local t2 = t1:clone()
+  local t3 = torch.randn(100,100)
+
+  local success, msg = totem.areTensorsEq(t1, t2, 1e-5)
+  tester:assert(success, "areTensorsEq should return true")
+
+  local success, msg = totem.areTensorsEq(t1, t3, 1e-5)
+  tester:assert(not success, "areTensorsEq should return false")
+  tester:assertErrorPattern(function() totem.assertTensorEq(t1, t3, 1e-5) end,
+                     "different dimensions",
+                     "wrong error message for tensors of different dimensions")
+
+  tester:assertNoError(function() totem.assertTensorEq(t1, t2, 1e-5) end,
+                       "assertTensorEq not raising an error")
+
+end
+
 function tests.test_TensorEqChecks()
   local t1 = torch.randn(100,100)
   local t2 = t1:clone()
@@ -285,7 +334,6 @@ function tests.test_TensorEqChecks()
 
   local success, msg = totem.areTensorsEq(t1, t2, 1e-5)
   tester:assert(success, "areTensorsEq should return true")
-  tester:asserteq(msg, nil, "areTensorsEq erroneously gives msg on success")
 
   local success, msg = totem.areTensorsEq(t1, t3, 1e-5)
   tester:assert(not success, "areTensorsEq should return false")
@@ -304,7 +352,6 @@ function tests.test_TensorNeChecks()
 
   local success, msg = totem.areTensorsNe(t1, t3, 1e-5)
   tester:assert(success, "areTensorsNe should return true")
-  tester:asserteq(msg, nil, "areTensorsNe erroneously gives msg on success")
 
   local success, msg = totem.areTensorsNe(t1, t2, 1e-5)
   tester:assert(not success, "areTensorsNe should return false")
@@ -387,7 +434,11 @@ function tests.test_checkTypePreservesSharing()
       totem.nn.checkTypePreservesSharing(dummyTest, seq, 'torch.FloatTensor')
   end
   dummyTest:add(test)
-  local testSuccess, msg = pcall(dummyTest.run, dummyTest)
+  -- change io.write behavior to not output sub-tests
+  local oldWrite = io.write
+  io.write = function() end
+  local testSuccess = pcall(function() return dummyTest:run() end)
+  io.write = oldWrite
   tester:asserteq(testSuccess, false, 'expect test failure, mod breaks sharing')
 end
 

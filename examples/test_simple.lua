@@ -4,13 +4,13 @@ require 'totem'
 
 local test = totem.TestSuite()
 
-tester = totem.Tester()
+local tester = totem.Tester()
 
 function test.a()
     local a = 10
     local b = 10
     tester:asserteq(a, b, 'a == b')
-    tester:assertne(a,b,'a ~= b')
+    tester:assertne(a, b, 'a ~= b')
 end
 
 function test.b()
