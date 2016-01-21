@@ -21,7 +21,7 @@ function test.B()
     local function f()
         return concatenate(a, b)
     end
-    -- assertError works similarly when using the command line parameter --rethrow 
+    -- assertError works similarly when using the command line parameter --rethrow
     tester:assertError(f, 'Error not caught')
 end
 
@@ -29,8 +29,8 @@ function test.C()
     local a = 'Hello'
     -- This assert will produce an error while trying to concatenate a nil value
     -- The command line parameter --rethrow makes the program crash with this
-    -- error with the correct information in the stack 
+    -- error with the correct information in the stack.
     tester:asserteq(concatenate(a,b), 'Hello World', 'Error in concatenation')
 end
-  
+
 return tester:add(test):run()

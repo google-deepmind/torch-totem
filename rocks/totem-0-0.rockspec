@@ -25,6 +25,8 @@ build = {
 		['totem.asserts'] = 'totem/asserts.lua',
 		['totem.examples.test_simple'] = 'examples/test_simple.lua',
 		['totem.examples.test_nn'] = 'examples/test_nn.lua',
+		['totem.examples.test_storage'] = 'examples/test_storage.lua',
+		['totem.examples.test_table'] = 'examples/test_table.lua',
 		['totem.examples.test_tensor'] = 'examples/test_tensor.lua',
 	},
 	install = {
