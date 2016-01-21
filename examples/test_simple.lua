@@ -2,24 +2,24 @@
 
 require 'totem'
 
-test = {}
+local test = totem.TestSuite()
 
-tester = totem.Tester()
+local tester = totem.Tester()
 
-function test.A()
+function test.a()
     local a = 10
     local b = 10
     tester:asserteq(a, b, 'a == b')
-    tester:assertne(a,b,'a ~= b')
+    tester:assertne(a, b, 'a ~= b')
 end
 
-function test.B()
+function test.b()
     local a = 10
     local b = 9
     tester:assertgt(a, b, 'a > b')
 end
 
-function test.C()
+function test.c()
     error('Errors are treated differently than failures')
 end
 

@@ -135,4 +135,3 @@ Example:
 ```sh
 totem-run --folder tests --summary
 ```
-

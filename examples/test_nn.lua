@@ -3,7 +3,7 @@
 require 'totem'
 require 'nn'
 
-test = {}
+local test = totem.TestSuite()
 
 local tester = totem.Tester()
 

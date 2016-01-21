@@ -482,6 +482,7 @@ function totem.nn.checkTypeCastable(tester, module, input, toType, precision)
     local preOutput = module:updateOutput(input)
     local gradOutput = produceRandomGradOutput(preOutput)
     local preGradInput = module:updateGradInput(input, gradOutput)
+
     tester:assertNoError(function() module:type(toType) end, "module cannot be cast to " .. toType)
 
     -- check that all components of the tensor have been correctly cast
@@ -495,8 +496,9 @@ function totem.nn.checkTypeCastable(tester, module, input, toType, precision)
     local castOutput = module:forward(castInput)
     local castGradOutput = castTableOfTensors(gradOutput, toType)
     local castGradInput = module:updateGradInput(castInput, castGradOutput)
-    tester:eq( preOutput, castTableOfTensors(castOutput, origType), "cast module output differs from before casting", precision)
-    tester:eq( preGradInput, castTableOfTensors(castGradInput, origType), "cast module grad input differs from before casting", precision)
+
+    tester:eq(castTableOfTensors(preOutput, toType), castOutput, "cast module output differs from before casting", precision)
+    tester:eq(castTableOfTensors(preGradInput, toType), castGradInput, "cast module grad input differs from before casting", precision)
 
     -- cast module back to original type
     tester:assertNoError(function() module:type(origType) end, "module cannot be base back to " .. origType)
@@ -505,8 +507,8 @@ function totem.nn.checkTypeCastable(tester, module, input, toType, precision)
     castTableOfTensors(gradOutput, origType)
     local postOutput = module:updateOutput(input)
     local postGradInput = module:updateGradInput(input, gradOutput)
-    tester:eq(preOutput, postOutput, "module output differs before and after typecast", precision)
-    tester:eq(preGradInput, postGradInput, "module gradInput differs before and after typecast", precision)
+    tester:eq(castTableOfTensors(preOutput, origType), postOutput, "module output differs before and after typecast", precision)
+    tester:eq(castTableOfTensors(preGradInput, origType), postGradInput, "module gradInput differs before and after typecast", precision)
 end
 
 
