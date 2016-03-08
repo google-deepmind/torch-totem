@@ -2,13 +2,10 @@
 
 # Totem - Torch test module
 
-Totem is a small test package in the style of torch.Tester. The interface is
-essentially the same as torch.Tester but differs/extends it in the following
-ways:
-
-* the test runner has different output (with colours!)
-* the test runner can output test results in a simple machine-readable file
-* the package includes some standard tests for nn modules
+NOTE: Totem has been merged into torch.Tester, and it is now recommended you
+use torch.Tester directly. See
+[here](https://github.com/torch/torch7/blob/master/doc/tester.md) for
+documentation.
 
 ## Basic test description
 
